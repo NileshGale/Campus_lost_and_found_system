@@ -10,7 +10,7 @@ from flask_login import current_user, login_user, logout_user
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
-from extensions import limiter, mongo
+from extensions import csrf, limiter, mongo
 from forms import ForgotPasswordForm, LoginForm, OtpForm, RegisterForm, ResetPasswordForm
 from models import User
 from utils import mailer
@@ -292,17 +292,21 @@ def login():
         session.permanent = True
         login_user(User(user), remember=form.remember.data)
         users.update_one({"_id": user["_id"]}, {"$set": {"last_login_at": now}})
-        flash(f"Welcome back, {user['name'].split(' ')[0]}!", "success")
-        return redirect(next_url if is_safe_redirect(next_url) else url_for("main.dashboard"))
+        default_target = url_for("admin.index") if user.get("role") == "admin" else url_for("main.dashboard")
+        return redirect(next_url if is_safe_redirect(next_url) else default_target)
     return render_template("auth/login.html", form=form)
 
 
-@bp.route("/logout", methods=["POST"])
+@bp.route("/logout", methods=["GET", "POST"])
+@csrf.exempt
 def logout():
     logout_user()
     session.clear()
     flash("You've been logged out.", "info")
-    return redirect(url_for("main.landing"))
+    response = redirect(url_for("main.landing"))
+    response.delete_cookie(current_app.config.get("SESSION_COOKIE_NAME", "lf_session"))
+    response.delete_cookie("remember_token")
+    return response
 
 
 # --- Forgot / reset password ------------------------------------------------------------

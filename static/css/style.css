@@ -252,6 +252,20 @@ a.card:hover { text-decoration: none; color: var(--text); border-color: var(--bo
 }
 .form-control::placeholder { color: #94A3B8; }
 .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-ring); }
+.password-input-group { position: relative; display: flex; align-items: center; width: 100%; }
+.password-input-group .form-control { padding-right: 44px; }
+.password-toggle {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; padding: 7px; cursor: pointer; color: var(--muted);
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;
+  transition: color 0.15s, background-color 0.15s;
+}
+.password-toggle:hover { color: var(--text); background: var(--surface-2); }
+.password-toggle svg { width: 19px; height: 19px; display: block; }
+.password-toggle .eye-open { display: inline-flex; }
+.password-toggle .eye-closed { display: none !important; }
+.password-toggle.is-visible .eye-open { display: none !important; }
+.password-toggle.is-visible .eye-closed { display: inline-flex !important; }
 textarea.form-control { min-height: 110px; resize: vertical; }
 select.form-control {
   appearance: none; padding-right: 40px; cursor: pointer;

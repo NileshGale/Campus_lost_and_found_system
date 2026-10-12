@@ -5,6 +5,16 @@
 <div class="form-group{% if f.errors %} has-error{% endif %}">
   {% if f.type == 'BooleanField' %}
     <label class="checkbox">{{ f(**kwargs) }}<span>{{ f.label.text }}</span></label>
+  {% elif f.type == 'PasswordField' %}
+    <label class="form-label" for="{{ f.id }}">{{ f.label.text }}</label>
+    <div class="password-input-group">
+      {% set extra_class = kwargs.pop('class_', '') %}
+      {{ f(class_=('form-control ' ~ extra_class.replace('form-control', ''))|trim, **kwargs) }}
+      <button type="button" class="password-toggle" aria-label="Show password" tabindex="-1">
+        <span class="eye-open">{{ icon('eye') }}</span>
+        <span class="eye-closed">{{ icon('eye-off') }}</span>
+      </button>
+    </div>
   {% else %}
     <label class="form-label" for="{{ f.id }}">{{ f.label.text }}</label>
     {% set extra_class = kwargs.pop('class_', '') %}

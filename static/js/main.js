@@ -189,5 +189,20 @@
         }
       });
     });
+  // --- Password visibility toggle (eye icon) ---
+  document.querySelectorAll(".password-toggle").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      var wrap = btn.closest(".password-input-group");
+      if (!wrap) return;
+      var input = wrap.querySelector("input");
+      if (!input) return;
+
+      var isText = input.type === "text";
+      input.type = isText ? "password" : "text";
+      btn.classList.toggle("is-visible", !isText);
+      btn.setAttribute("aria-label", isText ? "Show password" : "Hide password");
+    });
   });
 })();
+

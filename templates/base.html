@@ -56,10 +56,7 @@
             <div class="menu-head"><strong>{{ current_user.name }}</strong><span>{{ current_user.email }}</span></div>
             <hr>
             <a href="{{ url_for('main.profile') }}">{{ icon('user') }} Profile</a>
-            <form method="post" action="{{ url_for('auth.logout') }}">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit">{{ icon('logout') }} Log out</button>
-            </form>
+            <a href="{{ url_for('auth.logout') }}">{{ icon('logout') }} Log out</a>
           </div>
         </details>
       {% else %}
