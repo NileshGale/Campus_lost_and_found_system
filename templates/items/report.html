@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import field with context %}
+{% block title %}{{ 'Report a lost item' if kind == 'lost' else 'Report a found item' }}{% endblock %}
+{% block content %}
+<div class="container container-narrow page">
+  <a class="back-link" href="{{ url_for('main.dashboard') }}">{{ icon('arrow-left') }} Dashboard</a>
+  <div class="page-header">
+    <div>
+      {% if kind == 'lost' %}
+        <h1>Report a lost item</h1>
+        <p>Describe it clearly. We'll compare it with every found item and email you about likely matches.</p>
+      {% else %}
+        <h1>Report a found item</h1>
+        <p>Thank you! Share only general details publicly. Keep the identifying details private below.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <form class="card" method="post" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+
+    {{ field(form.title, placeholder="e.g. Black leather wallet" if kind == 'found' else "e.g. Blue Casio calculator") }}
+    <div class="form-row">
+      {{ field(form.category) }}
+      {{ field(form.date) }}
+    </div>
+    {{ field(form.location, list="campus-locations", placeholder="e.g. Library, 2nd floor",
+             hint="Pick a suggestion or type your own.") }}
+    <datalist id="campus-locations">
+      {% for loc in locations %}<option value="{{ loc }}">{% endfor %}
+    </datalist>
+
+    {% if kind == 'found' %}
+      {{ field(form.description, rows="4", placeholder="General description only, e.g. 'Black wallet found under a table in the reading hall.'",
+               hint="Everyone can see this. Don't mention brands, contents, names or numbers.") }}
+    {% else %}
+      {{ field(form.description, rows="4", placeholder="Colour, brand, size, stickers, what was inside... the more detail, the better the matches.") }}
+    {% endif %}
+
+    {% call field(form.photo, accept="image/jpeg,image/png,image/webp", data_image="1",
+                  hint=("Optional. JPG, PNG or WEBP up to 5 MB. Other users only see a blurred version." if kind == 'found'
+                        else "Optional. JPG, PNG or WEBP up to 5 MB.")) %}
+      <img class="photo-preview" data-preview="{{ form.photo.id }}" alt="Selected photo preview">
+    {% endcall %}
+
+    {% if kind == 'found' %}
+      <div class="form-section">
+        <h3>{{ icon('lock') }} Private verification details</h3>
+        <p>Only you and the admin can see this section. The real owner will have to answer your questions correctly.</p>
+        {{ field(form.held_at) }}
+        {{ field(form.hidden_details, rows="3", placeholder="e.g. Brown inner lining, a metro card, a Rs 500 note and a photo of a dog.",
+                 hint="Brand, contents, stickers, scratches, serial numbers: anything only the owner would know.") }}
+
+        <p class="form-label mt-2">Questions for the claimant</p>
+        <p class="form-hint mt-0 mb-2">Write at least one question. Your answer is never shown to the claimant.</p>
+        {% for q, a in form.question_pairs() %}
+          <div class="question-pair">
+            {{ field(q, placeholder="e.g. What colour is the inside of the wallet?" if loop.first else "") }}
+            {{ field(a, placeholder="e.g. Brown" if loop.first else "") }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <button class="btn btn-primary btn-lg" type="submit">{{ 'Post lost item' if kind == 'lost' else 'Post found item' }}</button>
+      <a class="btn btn-ghost btn-lg" href="{{ url_for('main.dashboard') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

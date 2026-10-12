@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ subject }}</title>
+</head>
+<body style="margin:0;padding:0;background:#F8FAFC;font-family:Inter,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1E293B;-webkit-font-smoothing:antialiased;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F8FAFC;">
+  <tr>
+    <td align="center" style="padding:32px 12px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+        <tr>
+          <td style="padding:0 4px 18px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="width:34px;height:34px;background:#2563EB;border-radius:10px;text-align:center;vertical-align:middle;color:#FFFFFF;font-weight:800;font-size:16px;">&#10003;</td>
+                <td style="padding-left:10px;font-size:15px;font-weight:700;color:#1E293B;">{{ app_name }}<br><span style="font-size:12px;font-weight:500;color:#64748B;">{{ college_name }}</span></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;padding:32px 28px;font-size:15px;line-height:1.6;">
+            {% block body %}{% endblock %}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 4px;font-size:12px;line-height:1.6;color:#64748B;">
+            {% block footer_note %}You're getting this email because of activity on your {{ app_name }} account.{% endblock %}<br>
+            {{ college_name }} · {{ security_desk }}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

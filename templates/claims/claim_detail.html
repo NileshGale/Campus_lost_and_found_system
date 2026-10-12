@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import field, status_badge, type_badge with context %}
+{% block title %}Claim for {{ item.title }}{% endblock %}
+{% block content %}
+{% set action_labels = {'submitted': 'Claim submitted', 'approved': 'Approved', 'rejected': 'Rejected', 'closed': 'Closed',
+                        'handover_completed': 'Item handed over', 'handover_code_resent': 'New handover code sent'} %}
+<div class="container page">
+  <a class="back-link" href="{{ url_for('claims.mine') if role == 'claimant' else (url_for('admin.claims') if role == 'admin' else url_for('items.detail', item_id=item._id|string)) }}">{{ icon('arrow-left') }} Back</a>
+
+  <div class="page-header">
+    <div>
+      <h1>Claim for “{{ item.title }}”</h1>
+      <p>Submitted {{ claim.created_at|localdt }} · {{ status_badge(claim.status) }}</p>
+    </div>
+    <a class="btn btn-outline" href="{{ url_for('items.detail', item_id=item._id|string) }}">View item</a>
+  </div>
+
+  {% if role == 'claimant' %}
+    {% if claim.status == 'pending' %}
+      <div class="callout callout-amber mb-3"><p><strong>Waiting for review.</strong> The finder or an admin will check your answers. You'll get an email with the decision.</p></div>
+    {% elif claim.status == 'approved' %}
+      <div class="callout callout-teal mb-3"><p><strong>Approved!</strong> Go to the {{ security_desk }} ({{ security_hours }}) with your college ID card. Tell the staff the 6-digit handover code from your email. Don't share it with anyone else.</p></div>
+    {% elif claim.status == 'completed' %}
+      <div class="callout callout-teal mb-3"><p><strong>Collected.</strong> This item was handed over to you on {{ claim.handover_completed_at|localdt }}.</p></div>
+    {% elif claim.status == 'rejected' %}
+      <div class="callout callout-red mb-3"><p><strong>Not approved.</strong> {{ claim.review_note or 'Your answers did not match the details recorded by the finder.' }}</p></div>
+    {% elif claim.status == 'closed' %}
+      <div class="callout mb-3"><p>This claim was closed because the item went to another claimant or the post was removed.</p></div>
+    {% endif %}
+  {% endif %}
+
+  {% if role != 'claimant' and pending > 1 and claim.status == 'pending' %}
+    <div class="callout callout-amber mb-3"><p><strong>Disputed item:</strong> {{ pending }} people claimed it. {{ 'Compare all claims before deciding.' if role == 'admin' else 'Only an admin can decide.' }}</p></div>
+  {% endif %}
+
+  <div class="layout-sidebar">
+    <div class="stack">
+      <div class="card">
+        <h2>Answers</h2>
+        {% if role in ['finder', 'admin'] %}
+          {% for c in comparisons %}
+            <div class="qa-block">
+              <div class="qa-head">
+                <strong>{{ c.question }}</strong>
+                <span class="sim {{ 'sim-high' if c.similarity >= 70 else ('sim-mid' if c.similarity >= 40 else 'sim-low') }}" title="A rough hint, not a decision">{{ c.similarity }}% similar</span>
+              </div>
+              <div class="compare">
+                <div><span class="label">Claimant answered</span>{{ c.answer }}</div>
+                <div><span class="label">Expected (private)</span>{{ c.expected or '-' }}</div>
+              </div>
+            </div>
+          {% else %}
+            <p class="muted">The finder didn't set any questions.</p>
+          {% endfor %}
+        {% else %}
+          {% for a in claim.answers %}
+            <div class="qa-block">
+              <strong>{{ a.question }}</strong>
+              <p class="mb-0">{{ a.answer }}</p>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <div class="form-section">
+          <h3>Description from the claimant</h3>
+          <p class="pre-line mb-0">{{ claim.details }}</p>
+        </div>
+
+        {% if role in ['finder', 'admin'] and item.hidden_details %}
+          <div class="private-box mt-3">
+            <h3>{{ icon('lock') }} Private details recorded by the finder</h3>
+            <p class="pre-line small mb-0">{{ item.hidden_details }}</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <h2>Proof of ownership</h2>
+        {% if claim.proof_files %}
+          <div class="proof-grid">
+            {% for file_id in claim.proof_files %}
+              <a href="{{ url_for('claims.proof', claim_id=claim._id|string, file_id=file_id) }}" target="_blank" rel="noopener">
+                <img src="{{ url_for('claims.proof', claim_id=claim._id|string, file_id=file_id) }}" alt="Proof image {{ loop.index }}">
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="muted mb-0">No proof images were uploaded.</p>
+        {% endif %}
+      </div>
+
+      {% if role == 'admin' and other_claims %}
+        <div class="card">
+          <h2>Other claims on this item</h2>
+          <ul class="list">
+            {% for other in other_claims %}
+              <li class="list-row">
+                <div class="list-main">
+                  <strong>{{ people.get(other.claimant_id, {}).get('name', 'User') }}</strong>
+                  <span class="muted small">{{ other.created_at|localdt }}</span>
+                </div>
+                <div class="btn-row">{{ status_badge(other.status) }}
+                  <a class="btn btn-soft btn-sm" href="{{ url_for('claims.detail', claim_id=other._id|string) }}">Compare</a>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+
+    <aside class="stack">
+      {% if role in ['finder', 'admin'] and claimant %}
+        <div class="card">
+          <h3>Claimant</h3>
+          {% if role == 'admin' %}
+            <p class="mb-0"><strong>{{ claimant.name }}</strong></p>
+            <p class="muted small">{{ claimant.email }}</p>
+          {% else %}
+            <p class="muted small">A verified {{ college_name }} account. Their name is checked against their ID at the security desk.</p>
+          {% endif %}
+          <div class="trust">
+            <meter min="0" max="100" low="41" high="70" optimum="100" value="{{ claimant.trust_score }}"></meter>
+            <strong>{{ claimant.trust_score }}</strong>
+          </div>
+          <p class="muted tiny mt-1 mb-0">Trust score · {{ claimant.rejected_claims or 0 }} rejected claim(s)</p>
+        </div>
+      {% endif %}
+
+      {% if can_review %}
+        <div class="card">
+          <h3>Your decision</h3>
+          <p class="muted small">Approving emails the claimant a handover code. Rejecting lowers their trust score.</p>
+          <form method="post" action="{{ url_for('claims.review', claim_id=claim._id|string) }}">
+            {{ review_form.hidden_tag() }}
+            {{ field(review_form.note, rows="3", placeholder="e.g. Answers matched the private details.") }}
+            <div class="btn-row">
+              <button class="btn btn-teal" type="submit" name="decision" value="approve">{{ icon('check') }} Approve</button>
+              <button class="btn btn-danger" type="submit" name="decision" value="reject">{{ icon('x') }} Reject</button>
+            </div>
+          </form>
+        </div>
+      {% elif role == 'finder' and claim.status == 'pending' and pending > 1 %}
+        <div class="callout callout-amber"><p>Several people claimed this item, so an admin will decide.</p></div>
+      {% endif %}
+
+      {% if role == 'admin' and claim.status == 'approved' %}
+        <div class="card">
+          <h3>{{ icon('key') }} Security desk handover</h3>
+          <p class="muted small">Ask the claimant for their college ID and the 6-digit code from their email.
+            {% if item.held_at == 'finder' %}<br><strong>Note:</strong> the finder hasn't dropped the item at the desk yet.{% endif %}</p>
+          <form method="post" action="{{ url_for('admin.complete', claim_id=claim._id|string) }}">
+            {{ handover_form.hidden_tag() }}
+            {{ field(handover_form.code, class_="otp-input", inputmode="numeric", autocomplete="off", maxlength="6", pattern="[0-9]{6}", placeholder="000000") }}
+            {{ field(handover_form.id_checked) }}
+            <button class="btn btn-primary btn-block" type="submit">Confirm handover</button>
+          </form>
+          <form class="mt-2" method="post" action="{{ url_for('admin.resend_code', claim_id=claim._id|string) }}" data-confirm="Send a new handover code? The old one will stop working.">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost btn-sm btn-block" type="submit">Email the claimant a new code</button>
+          </form>
+          <p class="muted tiny mt-1 mb-0">Code valid until {{ claim.handover_expires_at|localdt }}.</p>
+        </div>
+      {% endif %}
+
+      <div class="card">
+        <h3>Timeline</h3>
+        <ol class="timeline">
+          {% for h in claim.history %}
+            <li class="t-{{ h.action }}">
+              <strong>{{ action_labels.get(h.action, h.action|replace('_', ' ')|capitalize) }}</strong>
+              <span class="muted tiny">{{ h.at|localdt }}{% if h.by and role == 'admin' and people.get(h.by) %} · {{ people[h.by].name }}{% endif %}</span>
+              {% if h.note %}<div class="small">{{ h.note }}</div>{% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

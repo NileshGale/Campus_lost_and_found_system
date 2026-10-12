@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import status_badge, pagination, empty_state with context %}
+{% block title %}Claims · Admin{% endblock %}
+{% block content %}
+<div class="container page">
+  <div class="page-header">
+    <div>
+      <h1>Claims</h1>
+      <p>Disputed items have two or more pending claims, and only admins can decide those.</p>
+    </div>
+  </div>
+  {% include "admin/_nav.html" %}
+
+  <div class="tabs">
+    {% for tab in tabs %}
+      <a class="tab {{ 'active' if tab == status }}" href="{{ url_for('admin.claims', status=tab) }}">{{ tab|capitalize }}</a>
+    {% endfor %}
+  </div>
+
+  {% if result.docs %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Item</th><th>Claimant</th><th>Trust</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for claim in result.docs %}
+          {% set item = items.get(claim.item_id) %}{% set user = users.get(claim.claimant_id) %}
+          <tr>
+            <td>
+              {{ item.title if item else '-' }}
+              {% if claim.item_id in disputed_ids and claim.status == 'pending' %}<span class="badge status-pending">Disputed</span>{% endif %}
+            </td>
+            <td>{{ user.name if user else '-' }}<span class="cell-sub">{{ user.email if user }}</span></td>
+            <td>{{ user.trust_score if user else '-' }}</td>
+            <td class="nowrap">{{ claim.created_at|localdt }}</td>
+            <td>{{ status_badge(claim.status) }}</td>
+            <td class="actions"><a class="btn btn-soft btn-sm" href="{{ url_for('claims.detail', claim_id=claim._id|string) }}">{{ 'Review' if claim.status == 'pending' else 'Open' }}</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ pagination(result) }}
+  {% else %}
+    {{ empty_state("Nothing here", "No claims with this status.", "inbox") }}
+  {% endif %}
+</div>
+{% endblock %}

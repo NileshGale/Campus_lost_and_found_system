@@ -1,0 +1,27 @@
+{% extends "emails/_base.html" %}
+{% block body %}
+{% set colours = {
+  'pending': ('#FEF6E4', '#B45309', 'Pending review'),
+  'approved': ('#E6FAF7', '#0F766E', 'Approved'),
+  'completed': ('#E6FAF7', '#0F766E', 'Returned'),
+  'rejected': ('#FEEEEE', '#B91C1C', 'Rejected'),
+} %}
+{% if status and status in colours %}
+  {% set c = colours[status] %}
+  <div style="display:inline-block;background:{{ c[0] }};color:{{ c[1] }};font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:12px;">{{ c[2] }}</div>
+{% endif %}
+<h1 style="margin:0 0 8px;font-size:22px;line-height:1.3;color:#1E293B;">{{ heading }}</h1>
+{% if name %}<p style="margin:0 0 12px;color:#64748B;">Hi {{ name }},</p>{% endif %}
+<p style="margin:0 0 20px;">{{ message }}</p>
+{% if note %}
+<div style="border-left:3px solid #CBD5E1;padding:8px 14px;margin:0 0 20px;color:#475569;font-size:14px;">
+  <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748B;margin-bottom:2px;">Note from the reviewer</div>
+  {{ note }}
+</div>
+{% endif %}
+{% if cta_url %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+  <tr><td style="border-radius:10px;background:#2563EB;"><a href="{{ cta_url }}" style="display:inline-block;padding:12px 22px;color:#FFFFFF;font-weight:600;text-decoration:none;">{{ cta_label or 'Open' }}</a></td></tr>
+</table>
+{% endif %}
+{% endblock %}

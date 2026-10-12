@@ -1,0 +1,11 @@
+{% extends "emails/_base.html" %}
+{% block body %}
+<h1 style="margin:0 0 8px;font-size:22px;line-height:1.3;color:#1E293B;">Verify your email</h1>
+<p style="margin:0 0 20px;color:#64748B;">Hi {{ name }}, welcome! Enter this code to finish creating your account.</p>
+<div style="background:#EFF6FF;border:1px solid #BFD4FE;border-radius:12px;padding:20px;text-align:center;margin:0 0 20px;">
+  <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2563EB;margin-bottom:6px;">Verification code</div>
+  <div style="font-size:34px;font-weight:800;letter-spacing:10px;color:#1E293B;font-family:'Courier New',monospace;">{{ code }}</div>
+</div>
+<p style="margin:0 0 8px;">The code expires in <strong>{{ minutes }} minutes</strong>. You can enter it at most 5 times.</p>
+<p style="margin:0;color:#64748B;font-size:13px;">Never share this code. College staff will never ask you for it. If you didn't sign up, you can ignore this email.</p>
+{% endblock %}

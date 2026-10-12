@@ -1,0 +1,84 @@
+{# Reusable building blocks. Import with:
+   {% from "partials/_macros.html" import field, status_badge, type_badge, item_card, pagination, password_rules with context %} #}
+
+{% macro field(f, hint=None) -%}
+<div class="form-group{% if f.errors %} has-error{% endif %}">
+  {% if f.type == 'BooleanField' %}
+    <label class="checkbox">{{ f(**kwargs) }}<span>{{ f.label.text }}</span></label>
+  {% else %}
+    <label class="form-label" for="{{ f.id }}">{{ f.label.text }}</label>
+    {% set extra_class = kwargs.pop('class_', '') %}
+    {{ f(class_=('form-control ' ~ extra_class.replace('form-control', ''))|trim, **kwargs) }}
+  {% endif %}
+  {% if caller is defined %}{{ caller() }}{% endif %}
+  {% if hint %}<p class="form-hint">{{ hint }}</p>{% endif %}
+  {% for error in f.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro password_rules(list_id) -%}
+<ul class="password-rules" id="{{ list_id }}" aria-label="Password rules">
+  <li data-rule="length">8+ characters</li>
+  <li data-rule="upper">An uppercase letter</li>
+  <li data-rule="number">A number</li>
+  <li data-rule="special">A special character</li>
+</ul>
+{%- endmacro %}
+
+{% macro status_badge(status) -%}
+<span class="badge badge-dot status-{{ status }}">{{ status|status_label }}</span>
+{%- endmacro %}
+
+{% macro type_badge(kind) -%}
+<span class="badge type-{{ kind }}">{{ 'Lost' if kind == 'lost' else 'Found' }}</span>
+{%- endmacro %}
+
+{% macro item_card(item, score=None, show_status=True) -%}
+<a class="item-card" href="{{ url_for('items.detail', item_id=item._id|string) }}">
+  <div class="item-media">
+    {% if item.image_id %}
+      <img src="{{ url_for('static', filename='uploads/' ~ item.image_id ~ '.jpg') }}" alt="Photo of {{ item.title }}" loading="lazy">
+      {% if item.type == 'found' %}<span class="blur-note">Blurred for privacy</span>{% endif %}
+    {% else %}
+      <div class="placeholder">{{ icon('box') }}</div>
+    {% endif %}
+    {{ type_badge(item.type) }}
+  </div>
+  <div class="item-body">
+    <h3 title="{{ item.title }}">{{ item.title }}</h3>
+    <div class="item-meta">{{ icon('pin') }}<span>{{ item.location }}</span></div>
+    <div class="item-meta">{{ icon('calendar') }}<span>{{ item.date|datefmt }}</span></div>
+    <div class="item-foot">
+      <span class="muted tiny">{{ item.category }}</span>
+      {% if score is not none %}
+        <span class="match-score">{{ score }}% match</span>
+      {% elif show_status %}
+        {{ status_badge(item.status) }}
+      {% endif %}
+    </div>
+  </div>
+</a>
+{%- endmacro %}
+
+{% macro pagination(result) -%}
+{% if result.pages > 1 %}
+<nav class="pagination" aria-label="Pages">
+  {% if result.has_prev %}
+    <a class="btn btn-outline btn-sm" href="{{ url_with_page(result.page - 1) }}">{{ icon('arrow-left') }} Previous</a>
+  {% endif %}
+  <span class="current">Page {{ result.page }} of {{ result.pages }}</span>
+  {% if result.has_next %}
+    <a class="btn btn-outline btn-sm" href="{{ url_with_page(result.page + 1) }}">Next {{ icon('arrow-right') }}</a>
+  {% endif %}
+</nav>
+{% endif %}
+{%- endmacro %}
+
+{% macro empty_state(title, text, icon_name='inbox') -%}
+<div class="empty-state">
+  {{ icon(icon_name) }}
+  <h3>{{ title }}</h3>
+  <p>{{ text }}</p>
+  {% if caller is defined %}{{ caller() }}{% endif %}
+</div>
+{%- endmacro %}

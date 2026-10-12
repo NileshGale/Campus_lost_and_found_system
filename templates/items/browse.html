@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import item_card, pagination, empty_state with context %}
+{% block title %}Browse items{% endblock %}
+{% block content %}
+<div class="container page">
+  <div class="page-header">
+    <div>
+      <h1>Browse &amp; search</h1>
+      <p>Found items show only public details. Spot yours? Open it and raise a claim.</p>
+    </div>
+    <div class="quick-actions">
+      <a class="btn btn-outline" href="{{ url_for('items.report', kind='lost') }}">{{ icon('plus') }} Report lost</a>
+      <a class="btn btn-outline" href="{{ url_for('items.report', kind='found') }}">{{ icon('plus') }} Report found</a>
+    </div>
+  </div>
+
+  <form class="card" method="get" action="{{ url_for('items.browse') }}" role="search">
+    <div class="filter-bar">
+      <div class="form-group">
+        <label class="form-label" for="q">Keywords</label>
+        <input class="form-control" id="q" name="q" type="search" value="{{ filters.q }}" placeholder="e.g. black wallet, calculator, keys">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="type">Type</label>
+        <select class="form-control" id="type" name="type">
+          <option value="">Lost &amp; found</option>
+          <option value="lost" {{ 'selected' if filters.type == 'lost' }}>Lost items</option>
+          <option value="found" {{ 'selected' if filters.type == 'found' }}>Found items</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="category">Category</label>
+        <select class="form-control" id="category" name="category">
+          <option value="">All categories</option>
+          {% for c in categories %}<option value="{{ c }}" {{ 'selected' if filters.category == c }}>{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="status">Show</label>
+        <select class="form-control" id="status" name="status">
+          <option value="open" {{ 'selected' if filters.status == 'open' }}>Open only</option>
+          <option value="all" {{ 'selected' if filters.status == 'all' }}>Include claimed &amp; returned</option>
+        </select>
+      </div>
+    </div>
+    <div class="filter-more">
+      <div class="form-group">
+        <label class="form-label" for="location">Location</label>
+        <input class="form-control" id="location" name="location" value="{{ filters.location }}" placeholder="e.g. Library">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="date_from">From</label>
+        <input class="form-control" id="date_from" name="date_from" type="date" value="{{ filters.date_from }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="date_to">To</label>
+        <input class="form-control" id="date_to" name="date_to" type="date" value="{{ filters.date_to }}">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" type="submit">{{ icon('search') }} Search</button>
+        <a class="btn btn-ghost" href="{{ url_for('items.browse') }}">Clear</a>
+      </div>
+    </div>
+  </form>
+
+  <p class="result-count">{{ result.total }} item{{ '' if result.total == 1 else 's' }} found</p>
+
+  {% if result.docs %}
+    <div class="item-grid">
+      {% for item in result.docs %}{{ item_card(item) }}{% endfor %}
+    </div>
+    {{ pagination(result) }}
+  {% else %}
+    {% call empty_state("No items match your search", "Try fewer keywords or clear the filters. Nothing yet? Post it and we'll alert you when a match appears.", "search") %}
+      <a class="btn btn-primary" href="{{ url_for('items.report', kind='lost') }}">Report a lost item</a>
+    {% endcall %}
+  {% endif %}
+</div>
+{% endblock %}

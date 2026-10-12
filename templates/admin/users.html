@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import pagination, empty_state with context %}
+{% block title %}Users · Admin{% endblock %}
+{% block content %}
+<div class="container page">
+  <div class="page-header">
+    <div>
+      <h1>Users</h1>
+      <p>Ban accounts that misuse the system. A ban logs the user out immediately.</p>
+    </div>
+  </div>
+  {% include "admin/_nav.html" %}
+
+  <form class="card mb-3" method="get">
+    <div class="filter-more">
+      <div class="form-group">
+        <label class="form-label" for="q">Search</label>
+        <input class="form-control" id="q" name="q" value="{{ q }}" placeholder="Name or email">
+      </div>
+      <div class="btn-row"><button class="btn btn-primary" type="submit">{{ icon('search') }} Search</button></div>
+    </div>
+  </form>
+
+  {% if result.docs %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>User</th><th>Role</th><th>Verified</th><th>Trust</th><th>Rejected claims</th><th>Status</th><th class="center">Actions</th></tr></thead>
+        <tbody>
+        {% for user in result.docs %}
+          <tr>
+            <td><strong>{{ user.name }}</strong><span class="cell-sub">{{ user.email }}</span></td>
+            <td>{% if user.role == 'admin' %}<span class="badge badge-admin">Admin</span>{% else %}User{% endif %}</td>
+            <td>{{ 'Yes' if user.is_verified else 'No' }}</td>
+            <td>{{ user.trust_score }}</td>
+            <td>{{ user.rejected_claims or 0 }}</td>
+            <td>
+              {% if user.is_banned %}<span class="badge status-rejected">Banned</span>
+              {% elif (user.rejected_claims or 0) >= max_rejected %}<span class="badge status-pending">Can't claim</span>
+              {% else %}<span class="badge status-approved">Active</span>{% endif %}
+            </td>
+            <td>
+              {% if user.role != 'admin' %}
+              <div class="actions">
+                {% if (user.rejected_claims or 0) >= max_rejected %}
+                  <form method="post" action="{{ url_for('admin.unblock_claims', user_id=user._id|string) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-outline btn-sm" type="submit">Allow claims</button>
+                  </form>
+                {% endif %}
+                {% if user.is_banned %}
+                  <form method="post" action="{{ url_for('admin.unban', user_id=user._id|string) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-outline btn-sm" type="submit">Unban</button>
+                  </form>
+                {% else %}
+                  <form method="post" action="{{ url_for('admin.ban', user_id=user._id|string) }}" data-confirm="Ban {{ user.name }}? They'll be logged out and can't log in.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-danger btn-sm" type="submit">Ban</button>
+                  </form>
+                {% endif %}
+              </div>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ pagination(result) }}
+  {% else %}
+    {{ empty_state("No users found", "Try a different search.", "users") }}
+  {% endif %}
+</div>
+{% endblock %}

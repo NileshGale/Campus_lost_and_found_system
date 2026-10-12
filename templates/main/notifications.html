@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import pagination, empty_state with context %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+{% set icons = {'match': ('sparkles', 'fi-blue'), 'claim': ('file', 'fi-amber'), 'handover': ('check', 'fi-teal'),
+                'security': ('lock', 'fi-indigo'), 'admin': ('shield', 'fi-indigo')} %}
+<div class="container container-narrow page">
+  <div class="page-header">
+    <div>
+      <h1>Notifications</h1>
+      <p>Matches, claim updates and account alerts.</p>
+    </div>
+    {% if unread_count %}
+      <form method="post" action="{{ url_for('main.mark_all_read') }}" data-read-form>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline btn-sm" type="submit">Mark all as read</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if result.docs %}
+    <div class="card card-flush">
+      {% for n in result.docs %}
+        {% set ic = icons.get(n.type, ('bell', 'fi-blue')) %}
+        <div class="notif {{ 'unread' if not n.is_read }}">
+          <div class="notif-icon feature-icon {{ ic[1] }}">{{ icon(ic[0]) }}</div>
+          <div class="notif-body">
+            <p>
+              {% if n.link %}
+                <a href="{{ n.link }}" data-notification data-read-url="{{ url_for('main.mark_read', notification_id=n._id|string) }}">{{ n.message }}</a>
+              {% else %}{{ n.message }}{% endif %}
+            </p>
+            <span class="muted tiny">{{ n.created_at|localdt }}</span>
+          </div>
+          {% if not n.is_read %}
+            <form method="post" action="{{ url_for('main.mark_read', notification_id=n._id|string) }}" data-read-form>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-ghost btn-sm" type="submit" title="Mark as read">Mark read</button>
+            </form>
+            <span class="unread-dot" aria-label="Unread"></span>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    {{ pagination(result) }}
+  {% else %}
+    {{ empty_state("You're all caught up", "We'll let you know here (and by email) when something happens.", "bell") }}
+  {% endif %}
+</div>
+{% endblock %}

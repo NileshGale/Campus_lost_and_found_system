@@ -1,0 +1,8 @@
+{% set ep = request.endpoint %}
+<nav class="admin-nav" aria-label="Admin sections">
+  <a class="{{ 'active' if ep == 'admin.index' }}" href="{{ url_for('admin.index') }}">Overview</a>
+  <a class="{{ 'active' if ep == 'admin.claims' }}" href="{{ url_for('admin.claims') }}">Claims</a>
+  <a class="{{ 'active' if ep == 'admin.handover' }}" href="{{ url_for('admin.handover') }}">Security desk</a>
+  <a class="{{ 'active' if ep == 'admin.items' }}" href="{{ url_for('admin.items') }}">Posts</a>
+  <a class="{{ 'active' if ep == 'admin.users' }}" href="{{ url_for('admin.users') }}">Users</a>
+</nav>

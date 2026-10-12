@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import item_card, status_badge, type_badge, empty_state with context %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="container page">
+  <div class="page-header">
+    <div>
+      <h1>Hi, {{ current_user.first_name }}</h1>
+      <p>Here's everything happening with your posts and claims.</p>
+    </div>
+    <div class="quick-actions">
+      <a class="btn btn-primary" href="{{ url_for('items.report', kind='lost') }}">{{ icon('plus') }} Report lost</a>
+      <a class="btn btn-outline" href="{{ url_for('items.report', kind='found') }}">{{ icon('plus') }} Report found</a>
+    </div>
+  </div>
+
+  <div class="grid grid-4 mb-3">
+    <div class="card stat-card"><div class="feature-icon fi-indigo">{{ icon('search') }}</div><div><div class="num">{{ counts.lost }}</div><div class="label">Lost posts</div></div></div>
+    <div class="card stat-card"><div class="feature-icon fi-teal">{{ icon('box') }}</div><div><div class="num">{{ counts.found }}</div><div class="label">Found posts</div></div></div>
+    <div class="card stat-card"><div class="feature-icon fi-amber">{{ icon('file') }}</div><div><div class="num">{{ counts.claims }}</div><div class="label">My claims</div></div></div>
+    <div class="card stat-card"><div class="feature-icon fi-blue">{{ icon('check') }}</div><div><div class="num">{{ counts.returned }}</div><div class="label">Returned</div></div></div>
+  </div>
+
+  <div class="layout-sidebar">
+    <div class="stack">
+      {% if incoming %}
+      <div class="card">
+        <div class="card-header">
+          <h2>Claims waiting for your review</h2>
+          <span class="badge status-pending">{{ incoming|length }}</span>
+        </div>
+        <ul class="list">
+          {% for claim in incoming %}
+            {% set item = found_by_id.get(claim.item_id) %}
+            <li class="list-row">
+              <div class="list-main">
+                <strong>{{ item.title if item else 'Item' }}</strong>
+                <span class="muted small">Claimed {{ claim.created_at|localdt }}</span>
+              </div>
+              <a class="btn btn-soft btn-sm" href="{{ url_for('claims.detail', claim_id=claim._id|string) }}">Review</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if match_groups %}
+      <div class="card">
+        <div class="card-header"><h2>{{ icon('sparkles') }} Possible matches for your lost items</h2></div>
+        {% for item, matches in match_groups %}
+          <p class="muted small mb-2 {{ 'mt-3' if not loop.first }}">For <a href="{{ url_for('items.detail', item_id=item._id|string) }}">{{ item.title }}</a></p>
+          <div class="item-grid">
+            {% for match, score in matches %}{{ item_card(match, score=score) }}{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="card">
+        <div class="card-header">
+          <h2>My posts</h2>
+          <a class="small" href="{{ url_for('items.browse') }}">Browse all items</a>
+        </div>
+        {% if my_items %}
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Item</th><th>Type</th><th>Date</th><th>Status</th></tr></thead>
+              <tbody>
+              {% for item in my_items %}
+                <tr>
+                  <td><a href="{{ url_for('items.detail', item_id=item._id|string) }}">{{ item.title }}</a><span class="cell-sub">{{ item.location }}</span></td>
+                  <td>{{ type_badge(item.type) }}</td>
+                  <td class="nowrap">{{ item.date|datefmt }}</td>
+                  <td>{{ status_badge(item.status) }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          {% call empty_state("No posts yet", "Report something you lost or found and it will show up here.", "inbox") %}
+            <a class="btn btn-primary" href="{{ url_for('items.report', kind='lost') }}">Report an item</a>
+          {% endcall %}
+        {% endif %}
+      </div>
+    </div>
+
+    <aside class="stack">
+      <div class="card">
+        <h3>Your trust score</h3>
+        <div class="trust">
+          <meter min="0" max="100" low="41" high="70" optimum="100" value="{{ current_user.trust_score }}"></meter>
+          <strong>{{ current_user.trust_score }}</strong>
+        </div>
+        <p class="muted small mt-1 mb-0">
+          {% if current_user.can_claim %}
+            Rejected claims lower this score. After {{ max_rejected }} rejections you can't submit claims.
+          {% else %}
+            You can't submit claims right now. Contact the admin office.
+          {% endif %}
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>My recent claims</h3>
+          <a class="small" href="{{ url_for('claims.mine') }}">View all</a>
+        </div>
+        {% if my_claims %}
+          <ul class="list">
+            {% for claim in my_claims %}
+              {% set item = claim_items.get(claim.item_id) %}
+              <li class="list-row">
+                <div class="list-main">
+                  <a href="{{ url_for('claims.detail', claim_id=claim._id|string) }}">{{ item.title if item else 'Item' }}</a>
+                  <span class="muted tiny">{{ claim.created_at|localdt }}</span>
+                </div>
+                {{ status_badge(claim.status) }}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted small mb-0">You haven't claimed anything. If you spot your item in Browse, open it and press "This is mine".</p>
+        {% endif %}
+      </div>
+
+      <div class="card card-soft">
+        <h3>{{ icon('building') }} Collection point</h3>
+        <p class="small mb-0">{{ security_desk }}<br><span class="muted">{{ security_hours }}</span></p>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

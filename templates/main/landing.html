@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import item_card, empty_state with context %}
+{% block body_class %}landing{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="eyebrow">{{ college_name }} · Lost &amp; Found</span>
+      <h1>Lost something on campus? <span>Let's bring it back.</span></h1>
+      <p class="hero-lead">Report what you lost or found in a minute. We match posts automatically, and items go back only to the person who can prove they own them.</p>
+      <div class="btn-row">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('items.report', kind='lost') }}">{{ icon('search') }} Report Lost Item</a>
+        <a class="btn btn-outline btn-lg" href="{{ url_for('items.report', kind='found') }}">{{ icon('box') }} I Found Something</a>
+      </div>
+      <p class="hero-note">{{ icon('shield') }} Only verified {{ college_name }} email accounts can post or claim.</p>
+    </div>
+
+    <div class="hero-visual" aria-hidden="true">
+      <div class="mock-card">
+        <div class="mock-item">
+          <div class="mock-thumb"></div>
+          <div>
+            <span class="badge type-lost">Lost</span>
+            <p class="mock-title">Lost my black wallet</p>
+            <p class="mock-meta">Library, 2nd floor · Yesterday</p>
+          </div>
+        </div>
+        <div class="mock-match">
+          {{ icon('sparkles') }}
+          <div class="mock-bar"><span></span></div>
+          <span>87% match</span>
+        </div>
+        <div class="mock-item">
+          <div class="mock-thumb blurred"></div>
+          <div>
+            <span class="badge type-found">Found</span>
+            <p class="mock-title">Black leather wallet</p>
+            <p class="mock-meta">Library · Today · photo blurred</p>
+          </div>
+        </div>
+      </div>
+      <div class="mock-card mock-float">
+        <div class="row">
+          <span class="dot">{{ icon('key') }}</span>
+          <div>
+            <p class="mock-meta">Handover code</p>
+            <p class="mock-otp">• • • • • •</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="stats-strip">
+    <div class="stat"><div class="stat-value">{{ stats.reported }}</div><div class="stat-label">Items reported</div></div>
+    <div class="stat"><div class="stat-value">{{ stats.returned }}</div><div class="stat-label">Items returned</div></div>
+    <div class="stat"><div class="stat-value">{{ stats.users }}</div><div class="stat-label">Active users</div></div>
+  </div>
+</div>
+
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">How it works</span>
+      <h2>Three steps from lost to returned</h2>
+      <p>No notice boards, no guessing who it belongs to.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card step">
+        <div class="step-num">1</div>
+        <h3>Report</h3>
+        <p>Post what you lost, or what you found: where, when, a short description and an optional photo.</p>
+      </div>
+      <div class="card step">
+        <div class="step-num">2</div>
+        <h3>Get matched</h3>
+        <p>The system compares lost and found posts and emails both people when it spots a likely match.</p>
+      </div>
+      <div class="card step">
+        <div class="step-num">3</div>
+        <h3>Verify &amp; collect</h3>
+        <p>Answer the finder's questions, get approved, then collect at the security desk with your ID and a one-time code.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Features</span>
+      <h2>Built to return items to the right person</h2>
+      <p>Each check makes a fake claim harder.</p>
+    </div>
+    <div class="grid grid-4">
+      <div class="card feature">
+        <div class="feature-icon fi-blue">{{ icon('sparkles') }}</div>
+        <h3>Smart matching</h3>
+        <p>Text matching (TF-IDF) compares every new post with the opposite type and scores likely matches.</p>
+      </div>
+      <div class="card feature">
+        <div class="feature-icon fi-indigo">{{ icon('shield') }}</div>
+        <h3>Ownership checks</h3>
+        <p>Photos are blurred and key details stay hidden. Claimants answer questions only the owner can answer.</p>
+      </div>
+      <div class="card feature">
+        <div class="feature-icon fi-teal">{{ icon('building') }}</div>
+        <h3>Security desk handover</h3>
+        <p>Items change hands only at the security office, after an ID check and a one-time handover code.</p>
+      </div>
+      <div class="card feature">
+        <div class="feature-icon fi-amber">{{ icon('mail') }}</div>
+        <h3>Email alerts</h3>
+        <p>Get an email when there's a match, when your claim is reviewed, and when it's time to collect.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="recent">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Recently found</span>
+      <h2>Is one of these yours?</h2>
+      <p>Only public details are shown. Log in to see more and raise a claim.</p>
+    </div>
+    {% if recent_found %}
+      <div class="item-grid">
+        {% for item in recent_found %}{{ item_card(item, show_status=False) }}{% endfor %}
+      </div>
+      <div class="btn-row justify-center mt-3">
+        <a class="btn btn-outline" href="{{ url_for('items.browse', type='found') }}">See all found items {{ icon('arrow-right') }}</a>
+      </div>
+    {% else %}
+      {{ empty_state("Nothing has been handed in yet", "Found items will appear here as soon as someone reports one.", "box") }}
+    {% endif %}
+  </div>
+</section>
+
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">FAQ</span>
+      <h2>Questions people ask</h2>
+    </div>
+    <div class="faq">
+      <details>
+        <summary>How does verification work?</summary>
+        <p>When someone reports a found item, they keep a few details private (like what's inside a wallet) and write questions about them. To claim the item you answer those questions and can upload proof such as a bill or an old photo of you with the item. The finder or an admin compares your answers with the hidden details before approving.</p>
+      </details>
+      <details>
+        <summary>Where do I collect my item?</summary>
+        <p>Always at the {{ security_desk }} ({{ security_hours }}). Once your claim is approved you get a 6-digit handover code by email. Bring your college ID card, tell the code to the security staff, and they'll mark the item as returned.</p>
+      </details>
+      <details>
+        <summary>What happens with false claims?</summary>
+        <p>Every claim is tied to a verified college email. Each rejected claim lowers your trust score, and after {{ max_rejected }} rejected claims your account can no longer submit claims. Admins can also ban accounts that misuse the system.</p>
+      </details>
+      <details>
+        <summary>Who can use this?</summary>
+        <p>Anyone with a {{ college_name }} email address{% if allowed_domains %} (ending in {% for d in allowed_domains %}@{{ d }}{% if not loop.last %}, {% endif %}{% endfor %}){% endif %}. You verify your email with a one-time code when you register.</p>
+      </details>
+      <details>
+        <summary>What if two people claim the same item?</summary>
+        <p>The claim is marked as disputed and only an admin can decide. They compare both sets of answers and proof, and may ask both people to visit the security desk.</p>
+      </details>
+    </div>
+
+    <div class="cta-band">
+      <div>
+        <h2>Lost something today?</h2>
+        <p>The sooner you post, the sooner a match can find you.</p>
+      </div>
+      <a class="btn btn-outline btn-lg" href="{{ url_for('auth.register') if not current_user.is_authenticated else url_for('items.report', kind='lost') }}">
+        {{ 'Create your account' if not current_user.is_authenticated else 'Report a lost item' }}
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

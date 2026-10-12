@@ -1,0 +1,25 @@
+# --- Secrets: never commit these ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# --- User uploads (personal photos and ownership proofs) ---
+static/uploads/*
+!static/uploads/.gitkeep
+private_uploads/*
+!private_uploads/.gitkeep
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

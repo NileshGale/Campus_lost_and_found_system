@@ -1,0 +1,20 @@
+{% extends "emails/_base.html" %}
+{% block body %}
+<div style="display:inline-block;background:#E6FAF7;color:#0F766E;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:12px;">Claim approved</div>
+<h1 style="margin:0 0 8px;font-size:22px;line-height:1.3;color:#1E293B;">Your item is ready to collect</h1>
+<p style="margin:0 0 20px;color:#64748B;">Hi {{ name }}, your claim for <strong style="color:#1E293B;">“{{ item.title }}”</strong> was approved.</p>
+<div style="background:#E6FAF7;border:1px solid #99E6DA;border-radius:12px;padding:20px;text-align:center;margin:0 0 20px;">
+  <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#0F766E;margin-bottom:6px;">Handover code</div>
+  <div style="font-size:34px;font-weight:800;letter-spacing:10px;color:#1E293B;font-family:'Courier New',monospace;">{{ code }}</div>
+</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;font-size:14px;">
+  <tr><td style="padding:6px 0;color:#64748B;width:110px;vertical-align:top;">Where</td><td style="padding:6px 0;font-weight:600;">{{ security_desk }}</td></tr>
+  <tr><td style="padding:6px 0;color:#64748B;vertical-align:top;">When</td><td style="padding:6px 0;font-weight:600;">{{ security_hours }}</td></tr>
+  <tr><td style="padding:6px 0;color:#64748B;vertical-align:top;">Bring</td><td style="padding:6px 0;font-weight:600;">Your college ID card and this code</td></tr>
+  <tr><td style="padding:6px 0;color:#64748B;vertical-align:top;">Valid until</td><td style="padding:6px 0;font-weight:600;">{{ expires_at|localdt }}</td></tr>
+</table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
+  <tr><td style="border-radius:10px;background:#2563EB;"><a href="{{ url }}" style="display:inline-block;padding:12px 22px;color:#FFFFFF;font-weight:600;text-decoration:none;">View your claim</a></td></tr>
+</table>
+<p style="margin:0;color:#64748B;font-size:13px;">Tell this code only to the security desk staff when you collect the item. Nobody else needs it.</p>
+{% endblock %}

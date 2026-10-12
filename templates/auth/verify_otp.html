@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import field with context %}
+{% block title %}{{ 'Verify your email' if purpose == 'register' else 'Enter reset code' }}{% endblock %}
+{% block content %}
+<div class="container auth-wrap">
+  <div class="auth-card">
+    <div class="card">
+      <div class="auth-icon">{{ icon('mail') }}</div>
+      {% if purpose == 'register' %}
+        <h1>Verify your email</h1>
+        <p class="auth-sub">Enter the 6-digit code we sent to <strong>{{ masked_email }}</strong>. It expires in 10 minutes.</p>
+      {% else %}
+        <h1>Enter your reset code</h1>
+        <p class="auth-sub">If <strong>{{ masked_email }}</strong> has an account, we've emailed it a 6-digit code. It expires in 10 minutes.</p>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('auth.verify_otp') if purpose == 'register' else url_for('auth.reset_verify') }}">
+        {{ form.hidden_tag() }}
+        {{ field(form.code, class_="form-control otp-input", inputmode="numeric", autocomplete="one-time-code",
+                 maxlength="6", pattern="[0-9]{6}", placeholder="000000", autofocus=true) }}
+        <button class="btn btn-primary btn-block btn-lg" type="submit">{{ 'Verify email' if purpose == 'register' else 'Continue' }}</button>
+      </form>
+
+      <form class="resend-row" method="post" action="{{ url_for('auth.resend_otp') }}"
+            data-resend data-purpose="{{ purpose }}" data-cooldown="{{ cooldown }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="purpose" value="{{ purpose }}">
+        <span>Didn't get it? Check spam, or</span>
+        <button class="btn btn-ghost btn-sm" type="submit">Resend code</button>
+      </form>
+      <p class="center muted small mb-0" data-resend-status aria-live="polite"></p>
+
+      <p class="auth-foot">
+        {% if purpose == 'register' %}<a href="{{ url_for('auth.register') }}">Use a different email</a>
+        {% else %}<a href="{{ url_for('auth.forgot_password') }}">Use a different email</a>{% endif %}
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

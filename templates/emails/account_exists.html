@@ -1,0 +1,12 @@
+{% extends "emails/_base.html" %}
+{% block body %}
+<h1 style="margin:0 0 8px;font-size:22px;line-height:1.3;color:#1E293B;">You already have an account</h1>
+<p style="margin:0 0 20px;color:#64748B;">Hi {{ name }}, someone (hopefully you) just tried to register with this email address. You already have an account, so no new one was created.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;">
+  <tr>
+    <td style="border-radius:10px;background:#2563EB;"><a href="{{ login_url }}" style="display:inline-block;padding:12px 22px;color:#FFFFFF;font-weight:600;text-decoration:none;">Log in</a></td>
+    <td style="padding-left:10px;"><a href="{{ reset_url }}" style="color:#2563EB;font-weight:600;text-decoration:none;">Forgot your password?</a></td>
+  </tr>
+</table>
+<p style="margin:0;color:#64748B;font-size:13px;">If this wasn't you, you don't need to do anything. Your account is safe.</p>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import field, password_rules with context %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="container page">
+  <div class="page-header">
+    <div>
+      <h1>Profile</h1>
+      <p>Your account details and security settings.</p>
+    </div>
+  </div>
+
+  <div class="layout-sidebar">
+    <div class="stack">
+      <div class="card">
+        <h2>Account details</h2>
+        <form method="post">
+          {{ profile_form.hidden_tag() }}
+          <input type="hidden" name="action" value="profile">
+          {{ field(profile_form.name, autocomplete="name") }}
+          <div class="form-group">
+            <label class="form-label" for="email-readonly">College email</label>
+            <input class="form-control" id="email-readonly" type="email" value="{{ current_user.email }}" readonly disabled>
+            <p class="form-hint">Your email can't be changed because it identifies you on campus.</p>
+          </div>
+          <button class="btn btn-primary" type="submit">Save changes</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Change password</h2>
+        <p class="muted small">Changing your password logs you out on every other device.</p>
+        <form method="post">
+          {{ password_form.hidden_tag() }}
+          <input type="hidden" name="action" value="password">
+          {{ field(password_form.current_password, autocomplete="current-password") }}
+          {% call field(password_form.password, autocomplete="new-password", data_rules="pw-rules") %}
+            {{ password_rules("pw-rules") }}
+          {% endcall %}
+          {{ field(password_form.confirm, autocomplete="new-password") }}
+          <button class="btn btn-primary" type="submit">Update password</button>
+        </form>
+      </div>
+    </div>
+
+    <aside class="stack">
+      <div class="card">
+        <div class="avatar avatar-lg">{{ (current_user.name[:1] or '?')|upper }}</div>
+        <h3 class="mt-2 mb-0">{{ current_user.name }}</h3>
+        <p class="muted small">{{ current_user.email }}</p>
+        <p class="mb-0">
+          {% if current_user.is_admin %}<span class="badge badge-admin">Admin</span>{% else %}<span class="badge status-open">Student / Staff</span>{% endif %}
+        </p>
+        <hr class="divider">
+        <dl class="facts facts-tight">
+          <div class="fact"><dt>Posts</dt><dd>{{ stats.posts }}</dd></div>
+          <div class="fact"><dt>Claims</dt><dd>{{ stats.claims }}</dd></div>
+          <div class="fact"><dt>Returned</dt><dd>{{ stats.returned }}</dd></div>
+          <div class="fact"><dt>Member since</dt><dd>{{ current_user.doc.created_at|datefmt }}</dd></div>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>Trust score</h3>
+        <div class="trust">
+          <meter min="0" max="100" low="41" high="70" optimum="100" value="{{ current_user.trust_score }}"></meter>
+          <strong>{{ current_user.trust_score }}</strong>
+        </div>
+        <p class="muted small mt-1 mb-0">
+          Rejected claims: {{ current_user.rejected_claims }} of {{ max_rejected }}.
+          {% if not current_user.can_claim %}You can't submit new claims. Contact the admin office.{% endif %}
+        </p>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

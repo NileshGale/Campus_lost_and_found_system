@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import item_card, status_badge, type_badge, empty_state with context %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block content %}
+<div class="container page">
+  <a class="back-link" href="{{ url_for('items.browse') }}">{{ icon('arrow-left') }} Browse</a>
+
+  {% if item.status == 'removed' %}
+    <div class="alert alert-warning">{{ icon('alert') }}<div class="alert-body">This post was removed{% if item.removed_reason %}: {{ item.removed_reason }}{% endif %}. Only you and admins can see it.</div></div>
+  {% endif %}
+
+  <div class="layout-sidebar">
+    <div class="stack">
+      <div class="card">
+        <div class="grid grid-2">
+          <div class="detail-media">
+            {% if item.image_id %}
+              {% if can_see_photo %}
+                <a href="{{ url_for('items.photo', item_id=item._id|string) }}" target="_blank" rel="noopener">
+                  <img src="{{ url_for('items.photo', item_id=item._id|string) }}" alt="Photo of {{ item.title }}">
+                </a>
+              {% else %}
+                <img src="{{ url_for('static', filename='uploads/' ~ item.image_id ~ '.jpg') }}" alt="Blurred photo of {{ item.title }}">
+                <span class="blur-note">Blurred for privacy</span>
+              {% endif %}
+            {% else %}
+              <div class="placeholder">{{ icon('image') }}</div>
+            {% endif %}
+          </div>
+          <div>
+            <div class="detail-title">{{ type_badge(item.type) }} {{ status_badge(item.status) }}</div>
+            <h1>{{ item.title }}</h1>
+            <p class="pre-line">{{ item.description }}</p>
+          </div>
+        </div>
+        <dl class="facts">
+          <div class="fact"><dt>Category</dt><dd>{{ item.category }}</dd></div>
+          <div class="fact"><dt>{{ 'Last seen' if item.type == 'lost' else 'Found at' }}</dt><dd>{{ item.location }}</dd></div>
+          <div class="fact"><dt>{{ 'Date lost' if item.type == 'lost' else 'Date found' }}</dt><dd>{{ item.date|datefmt }}</dd></div>
+          <div class="fact"><dt>Posted</dt><dd>{{ item.created_at|localdt }}</dd></div>
+          {% if item.type == 'found' and (is_owner or is_admin) %}
+            <div class="fact"><dt>Item is now</dt><dd>{{ 'At the security desk' if item.held_at == 'security_desk' else ('Returned' if item.held_at == 'returned' else 'With the finder') }}</dd></div>
+          {% endif %}
+          {% if poster %}
+            <div class="fact"><dt>Posted by</dt><dd>{{ poster.name }}<span class="cell-sub">{{ poster.email }}</span></dd></div>
+          {% endif %}
+        </dl>
+
+        {% if item.type == 'found' and (is_owner or is_admin) %}
+          <div class="private-box">
+            <h3>{{ icon('lock') }} Private details (only you{{ ' and admins' if is_owner else '' }} can see this)</h3>
+            <p class="pre-line small mb-0">{{ item.hidden_details }}</p>
+            <ul class="qa-list">
+              {% for q in item.verification_questions %}
+                <li><strong>{{ q.question }}</strong>Expected answer: {{ q.answer }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+
+      {% if claims %}
+      <div class="card">
+        <div class="card-header">
+          <h2>Claims on this item</h2>
+          {% if pending > 1 %}<span class="badge status-pending">Disputed: an admin decides</span>{% endif %}
+        </div>
+        <ul class="list">
+          {% for claim in claims %}
+            <li class="list-row">
+              <div class="list-main">
+                <strong>Claim #{{ loop.index }}</strong>
+                <span class="muted small">Submitted {{ claim.created_at|localdt }}</span>
+              </div>
+              <div class="btn-row">
+                {{ status_badge(claim.status) }}
+                <a class="btn btn-soft btn-sm" href="{{ url_for('claims.detail', claim_id=claim._id|string) }}">{{ 'Review' if claim.status == 'pending' else 'View' }}</a>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if is_owner and item.status == 'open' %}
+      <div class="card">
+        <div class="card-header">
+          <h2>{{ icon('sparkles') }} Possible matches</h2>
+          <span class="muted small">Updated every time you open this page</span>
+        </div>
+        {% if matches %}
+          <div class="item-grid">
+            {% for match, score in matches %}{{ item_card(match, score=score) }}{% endfor %}
+          </div>
+        {% else %}
+          <p class="muted mb-0">No likely matches yet. We'll notify you by email when one is posted.</p>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <aside class="stack">
+      {% if my_claim %}
+        <div class="card">
+          <h3>Your claim</h3>
+          <p>{{ status_badge(my_claim.status) }}</p>
+          <a class="btn btn-soft btn-block" href="{{ url_for('claims.detail', claim_id=my_claim._id|string) }}">View my claim</a>
+        </div>
+      {% elif can_claim %}
+        <div class="card">
+          <h3>Is this yours?</h3>
+          <p class="muted small">You'll answer the finder's questions and can upload proof, like a bill or an old photo of you with it.</p>
+          <a class="btn btn-primary btn-block btn-lg" href="{{ url_for('claims.new', item_id=item._id|string) }}">{{ icon('shield') }} This is mine</a>
+        </div>
+      {% elif item.type == 'found' and item.status == 'open' and not is_owner and not is_admin and not current_user.can_claim %}
+        <div class="callout callout-red">You can't submit claims because {{ max_rejected }} of your claims were rejected. Contact the admin office.</div>
+      {% elif item.type == 'lost' and item.status == 'open' and not is_owner %}
+        <div class="card">
+          <h3>Have you found this?</h3>
+          <p class="muted small">Report it as found. The owner will be notified and can claim it through the security desk.</p>
+          <a class="btn btn-teal btn-block" href="{{ url_for('items.report', kind='found', **{'from': item._id|string}) }}">{{ icon('box') }} I found this</a>
+        </div>
+      {% endif %}
+
+      {% if is_owner and item.status == 'open' %}
+        <div class="card">
+          <h3>Manage post</h3>
+          <div class="stack">
+            {% if item.type == 'lost' %}
+              <form method="post" action="{{ url_for('items.resolve', item_id=item._id|string) }}" data-confirm="Mark this item as returned? It will no longer appear in searches.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-teal btn-block" type="submit">{{ icon('check') }} I got it back</button>
+              </form>
+            {% endif %}
+            <form method="post" action="{{ url_for('items.delete', item_id=item._id|string) }}" data-confirm="Delete this post? This can't be undone.">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger btn-block" type="submit">Delete post</button>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if is_admin %}
+        <div class="card">
+          <h3>{{ icon('shield') }} Admin</h3>
+          <div class="stack">
+            {% if item.type == 'found' and item.held_at == 'finder' and item.status in ['open', 'claimed'] %}
+              <form method="post" action="{{ url_for('admin.mark_received', item_id=item._id|string) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-outline btn-block" type="submit">Mark received at desk</button>
+              </form>
+            {% endif %}
+            {% if item.status in ['open', 'claimed'] %}
+              <form method="post" action="{{ url_for('admin.remove_item', item_id=item._id|string) }}" data-confirm="Remove this post? Open claims on it will be closed.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                  <label class="form-label" for="reason">Reason for removing</label>
+                  <input class="form-control" id="reason" name="reason" required minlength="3" maxlength="200" placeholder="e.g. Fake or duplicate post">
+                </div>
+                <button class="btn btn-danger btn-block" type="submit">Remove post</button>
+              </form>
+            {% elif item.status == 'removed' %}
+              <form method="post" action="{{ url_for('admin.restore_item', item_id=item._id|string) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-outline btn-block" type="submit">Restore post</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="card card-soft">
+        <h3>{{ icon('building') }} Handover point</h3>
+        <p class="small mb-0">Items are returned only at the {{ security_desk }} ({{ security_hours }}), after an ID check and a one-time code.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

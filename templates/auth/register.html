@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import field, password_rules with context %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="container auth-wrap">
+  <div class="auth-card">
+    <div class="card">
+      <div class="auth-icon">{{ icon('user') }}</div>
+      <h1>Create your account</h1>
+      <p class="auth-sub">Use your college email. We'll send a 6-digit code to verify it.</p>
+      <form method="post">
+        {{ form.hidden_tag() }}
+        {{ field(form.name, autocomplete="name", placeholder="e.g. Priya Nair") }}
+        {{ field(form.email, autocomplete="email", placeholder="you@" ~ allowed_domains[0],
+                 hint="Only @" ~ allowed_domains|join(", @") ~ " addresses can register.") }}
+        {% call field(form.password, autocomplete="new-password", data_rules="pw-rules") %}
+          {{ password_rules("pw-rules") }}
+        {% endcall %}
+        {{ field(form.confirm, autocomplete="new-password") }}
+        <button class="btn btn-primary btn-block btn-lg" type="submit">Create account</button>
+      </form>
+      <p class="auth-foot">Already registered? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import status_badge, empty_state with context %}
+{% block title %}My claims{% endblock %}
+{% block content %}
+<div class="container page">
+  <div class="page-header">
+    <div>
+      <h1>My claims</h1>
+      <p>Track every item you've claimed.</p>
+    </div>
+    <a class="btn btn-outline" href="{{ url_for('items.browse', type='found') }}">{{ icon('search') }} Browse found items</a>
+  </div>
+
+  {% if claims %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Item</th><th>Submitted</th><th>Status</th><th>Next step</th><th></th></tr></thead>
+        <tbody>
+        {% for claim in claims %}
+          {% set item = items.get(claim.item_id) %}
+          <tr>
+            <td>
+              {% if item %}<a href="{{ url_for('items.detail', item_id=item._id|string) }}">{{ item.title }}</a><span class="cell-sub">{{ item.location }}</span>{% else %}Item removed{% endif %}
+            </td>
+            <td class="nowrap">{{ claim.created_at|localdt }}</td>
+            <td>{{ status_badge(claim.status) }}</td>
+            <td class="small">
+              {% if claim.status == 'pending' %}Waiting for review.
+              {% elif claim.status == 'approved' %}Collect it at the security desk with your ID and the code we emailed you.
+              {% elif claim.status == 'completed' %}Collected. Enjoy having it back!
+              {% elif claim.status == 'rejected' %}Not approved{% if claim.review_note %}: {{ claim.review_note }}{% endif %}.
+              {% else %}Closed.{% endif %}
+            </td>
+            <td><a class="btn btn-soft btn-sm" href="{{ url_for('claims.detail', claim_id=claim._id|string) }}">Open</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    {% call empty_state("No claims yet", "When you find your item in Browse, open it and press “This is mine”.", "file") %}
+      <a class="btn btn-primary" href="{{ url_for('items.browse', type='found') }}">Browse found items</a>
+    {% endcall %}
+  {% endif %}
+</div>
+{% endblock %}
