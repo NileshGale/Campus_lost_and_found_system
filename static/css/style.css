@@ -262,10 +262,10 @@ a.card:hover { text-decoration: none; color: var(--text); border-color: var(--bo
 }
 .password-toggle:hover { color: var(--text); background: var(--surface-2); }
 .password-toggle svg { width: 19px; height: 19px; display: block; }
-.password-toggle .eye-open { display: inline-flex; }
-.password-toggle .eye-closed { display: none !important; }
-.password-toggle.is-visible .eye-open { display: none !important; }
-.password-toggle.is-visible .eye-closed { display: inline-flex !important; }
+.password-toggle .eye-slash { display: inline-flex; }
+.password-toggle .eye-plain { display: none !important; }
+.password-toggle.is-visible .eye-slash { display: none !important; }
+.password-toggle.is-visible .eye-plain { display: inline-flex !important; }
 textarea.form-control { min-height: 110px; resize: vertical; }
 select.form-control {
   appearance: none; padding-right: 40px; cursor: pointer;
@@ -289,11 +289,21 @@ input[type="file"].form-control::file-selector-button {
 .checkbox input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary); flex: none; }
 .form-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
 
-.password-rules { list-style: none; padding: 0; margin: 10px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 0.82rem; color: var(--muted); }
-.password-rules li { display: flex; align-items: center; gap: 6px; }
-.password-rules li::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-strong); flex: none; }
-.password-rules li.ok { color: var(--teal-text); }
-.password-rules li.ok::before { border-color: var(--teal); background: var(--teal) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 9px no-repeat; }
+.password-rules { list-style: none; padding: 0; margin: 10px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 0.83rem; color: var(--muted); }
+.password-rules li { display: flex; align-items: center; gap: 7px; transition: color 0.15s ease; }
+.password-rules li::before {
+  content: ""; width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--border-strong);
+  flex: none; transition: all 0.15s ease;
+}
+.password-rules li.ok {
+  color: #16a34a;
+  font-weight: 600;
+}
+.password-rules li.ok::before {
+  border-color: #16a34a;
+  background: #16a34a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 9px no-repeat;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+}
 
 .otp-input {
   font-size: 1.9rem; font-weight: 700; letter-spacing: 0.5em; text-align: center; padding: 14px 0 14px 0.5em;

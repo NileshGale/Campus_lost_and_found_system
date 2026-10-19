@@ -105,18 +105,22 @@
     var list = document.getElementById(input.getAttribute("data-rules"));
     if (!list) return;
     var rules = {
-      length: function (v) { return v.length >= 8; },
-      upper: function (v) { return /[A-Z]/.test(v); },
-      number: function (v) { return /[0-9]/.test(v); },
-      special: function (v) { return /[^A-Za-z0-9\s]/.test(v); }
+      length: function (v) { return (v || "").length >= 8; },
+      upper: function (v) { return /[A-Z]/.test(v || ""); },
+      number: function (v) { return /[0-9]/.test(v || ""); },
+      special: function (v) { return /[^A-Za-z0-9\s]/.test(v || ""); }
     };
     var update = function () {
+      var val = input.value || "";
       list.querySelectorAll("[data-rule]").forEach(function (li) {
-        var ok = rules[li.getAttribute("data-rule")](input.value);
+        var ruleName = li.getAttribute("data-rule");
+        var ok = rules[ruleName] ? rules[ruleName](val) : false;
         li.classList.toggle("ok", ok);
       });
     };
-    input.addEventListener("input", update);
+    ["input", "keyup", "change", "paste"].forEach(function (evt) {
+      input.addEventListener(evt, update);
+    });
     update();
   });
 

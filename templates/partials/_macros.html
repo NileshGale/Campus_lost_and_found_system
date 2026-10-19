@@ -11,8 +11,8 @@
       {% set extra_class = kwargs.pop('class_', '') %}
       {{ f(class_=('form-control ' ~ extra_class.replace('form-control', ''))|trim, **kwargs) }}
       <button type="button" class="password-toggle" aria-label="Show password" tabindex="-1">
-        <span class="eye-open">{{ icon('eye') }}</span>
-        <span class="eye-closed">{{ icon('eye-off') }}</span>
+        <span class="eye-slash">{{ icon('eye-off') }}</span>
+        <span class="eye-plain">{{ icon('eye') }}</span>
       </button>
     </div>
   {% else %}
