@@ -2,74 +2,75 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F8FAFC">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="description" content="Report and recover lost items at {{ college_name }}.">
   <title>{% block title %}{% endblock %}{% if self.title() %} · {% endif %}{{ app_name }}</title>
   <link rel="icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body class="{% block body_class %}app{% endblock %}">
-<a class="visually-hidden" href="#main">Skip to content</a>
+{% set ep = request.endpoint or '' %}
+<body class="{% block body_class %}app{% endblock %}{% if current_user.is_authenticated %} has-bottom-nav{% endif %}">
+<a class="visually-hidden skip-link" href="#main">Skip to content</a>
 
 <header class="navbar">
   <div class="container navbar-inner">
-    <a class="brand" href="{{ url_for('main.landing') }}">
-      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
-        <rect width="40" height="40" rx="11" fill="#2563EB"/>
-        <path d="M20 8.5c-5.1 0-9.2 4-9.2 9 0 6.7 9.2 13.6 9.2 13.6s9.2-6.9 9.2-13.6c0-5-4.1-9-9.2-9Z" fill="#fff"/>
-        <path d="m16 17.6 2.8 2.8 5.2-5.3" fill="none" stroke="#14B8A6" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span>{{ app_name }}<small>{{ college_name }}</small></span>
+    <a class="brand" href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('main.landing') }}">
+      <span class="brand-mark" aria-hidden="true">LF</span>
+      <span class="brand-text">{{ app_name }}<small>{{ college_name }}</small></span>
     </a>
 
-    <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">{{ icon('menu') }}</button>
+    {% if current_user.is_authenticated %}
+      <nav class="nav-pills" aria-label="Main">
+        <a class="nav-pill {{ 'active' if ep == 'main.dashboard' }}" href="{{ url_for('main.dashboard') }}">Home</a>
+        <a class="nav-pill {{ 'active' if ep in ['items.browse', 'items.detail'] }}" href="{{ url_for('items.browse') }}">Browse</a>
+        <a class="nav-pill {{ 'active' if ep.startswith('claims.') }}" href="{{ url_for('claims.mine') }}">My claims</a>
+        {% if current_user.is_admin %}
+          <a class="nav-pill {{ 'active' if ep.startswith('admin.') }}" href="{{ url_for('admin.index') }}">Admin</a>
+        {% endif %}
+      </nav>
 
-    <nav class="nav-links" aria-label="Main">
-      {% if current_user.is_authenticated %}
-        {% set ep = request.endpoint or '' %}
-        <a class="nav-link {{ 'active' if ep == 'main.dashboard' }}" href="{{ url_for('main.dashboard') }}">Dashboard</a>
-        <a class="nav-link {{ 'active' if ep == 'items.browse' }}" href="{{ url_for('items.browse') }}">Browse</a>
-        <details class="dropdown">
-          <summary class="nav-link {{ 'active' if ep == 'items.report' }}">Report</summary>
+      <div class="nav-actions">
+        <details class="dropdown desktop-only">
+          <summary class="btn btn-primary btn-pill">{{ icon('plus') }} Report</summary>
           <div class="dropdown-menu">
-            <a href="{{ url_for('items.report', kind='lost') }}">{{ icon('search') }} I lost something</a>
-            <a href="{{ url_for('items.report', kind='found') }}">{{ icon('box') }} I found something</a>
+            <a href="{{ url_for('items.report', kind='lost') }}"><span class="menu-icon tone-indigo">{{ icon('search') }}</span> I lost something</a>
+            <a href="{{ url_for('items.report', kind='found') }}"><span class="menu-icon tone-teal">{{ icon('box') }}</span> I found something</a>
           </div>
         </details>
-        <a class="nav-link {{ 'active' if ep.startswith('claims.') }}" href="{{ url_for('claims.mine') }}">My Claims</a>
-        {% if current_user.is_admin %}
-          <a class="nav-link {{ 'active' if ep.startswith('admin.') }}" href="{{ url_for('admin.index') }}">Admin</a>
-        {% endif %}
-        <a class="nav-link bell {{ 'active' if ep == 'main.notifications' }}" href="{{ url_for('main.notifications') }}" aria-label="Notifications{% if unread_count %} ({{ unread_count }} unread){% endif %}">
-          {{ icon('bell') }}<span class="nav-label-mobile">Notifications</span>
+        <a class="icon-btn {{ 'active' if ep == 'main.notifications' }}" href="{{ url_for('main.notifications') }}" aria-label="Notifications{% if unread_count %} ({{ unread_count }} unread){% endif %}">
+          {{ icon('bell') }}
           {% if unread_count %}<span class="bell-count">{{ unread_count if unread_count < 100 else '99+' }}</span>{% endif %}
         </a>
         <details class="dropdown">
-          <summary class="nav-link" aria-label="Account menu">
-            <span class="avatar">{{ (current_user.name[:1] or '?')|upper }}</span><span class="nav-label-mobile">Account</span>
-          </summary>
+          <summary class="avatar-btn" aria-label="Account menu">{{ (current_user.name[:1] or '?')|upper }}</summary>
           <div class="dropdown-menu">
             <div class="menu-head"><strong>{{ current_user.name }}</strong><span>{{ current_user.email }}</span></div>
             <hr>
             <a href="{{ url_for('main.profile') }}">{{ icon('user') }} Profile</a>
+            <a href="{{ url_for('claims.mine') }}">{{ icon('file') }} My claims</a>
+            {% if current_user.is_admin %}<a href="{{ url_for('admin.index') }}">{{ icon('shield') }} Admin panel</a>{% endif %}
             <form method="post" action="{{ url_for('auth.logout') }}" data-confirm="You'll need to sign in again to report items or check claims." data-confirm-title="Log out?" data-confirm-ok="Log out">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit">{{ icon('logout') }} Log out</button>
             </form>
           </div>
         </details>
-      {% else %}
+      </div>
+    {% else %}
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">{{ icon('menu') }}</button>
+      <nav class="nav-links" aria-label="Main">
         <a class="nav-link" href="{{ url_for('main.landing') }}#how">How It Works</a>
         <a class="nav-link" href="{{ url_for('main.landing') }}#features">Features</a>
         <a class="nav-link" href="{{ url_for('main.landing') }}#faq">FAQ</a>
-        <a class="nav-link {{ 'active' if request.endpoint == 'auth.login' }}" href="{{ url_for('auth.login') }}">Login</a>
-        <a class="btn btn-primary nav-cta" href="{{ url_for('auth.register') }}">Register</a>
-      {% endif %}
-    </nav>
+        <a class="nav-link {{ 'active' if ep == 'auth.login' }}" href="{{ url_for('auth.login') }}">Login</a>
+        <a class="btn btn-primary btn-pill nav-cta" href="{{ url_for('auth.register') }}">Register</a>
+      </nav>
+    {% endif %}
   </div>
 </header>
 
@@ -97,12 +98,8 @@
     <div class="footer-grid">
       <div>
         <a class="brand" href="{{ url_for('main.landing') }}">
-          <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
-            <rect width="40" height="40" rx="11" fill="#2563EB"/>
-            <path d="M20 8.5c-5.1 0-9.2 4-9.2 9 0 6.7 9.2 13.6 9.2 13.6s9.2-6.9 9.2-13.6c0-5-4.1-9-9.2-9Z" fill="#fff"/>
-            <path d="m16 17.6 2.8 2.8 5.2-5.3" fill="none" stroke="#14B8A6" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span>{{ app_name }}<small>{{ college_name }}</small></span>
+          <span class="brand-mark" aria-hidden="true">LF</span>
+          <span class="brand-text">{{ app_name }}<small>{{ college_name }}</small></span>
         </a>
         <p class="muted mt-2">A safe way for students and staff to report lost items, find what was handed in, and prove ownership before collecting.</p>
       </div>
@@ -138,6 +135,22 @@
     </div>
   </div>
 </footer>
+
+{% if current_user.is_authenticated %}
+<nav class="bottom-nav" aria-label="Quick navigation">
+  <a class="bn-item {{ 'active' if ep == 'main.dashboard' }}" href="{{ url_for('main.dashboard') }}" aria-label="Home"{% if ep == 'main.dashboard' %} aria-current="page"{% endif %}>{{ icon('home') }}</a>
+  <a class="bn-item {{ 'active' if ep in ['items.browse', 'items.detail'] }}" href="{{ url_for('items.browse') }}" aria-label="Browse items"{% if ep == 'items.browse' %} aria-current="page"{% endif %}>{{ icon('grid') }}</a>
+  <details class="dropdown bn-report">
+    <summary aria-label="Report an item">{{ icon('plus') }} Report</summary>
+    <div class="dropdown-menu">
+      <a href="{{ url_for('items.report', kind='lost') }}"><span class="menu-icon tone-indigo">{{ icon('search') }}</span> I lost something</a>
+      <a href="{{ url_for('items.report', kind='found') }}"><span class="menu-icon tone-teal">{{ icon('box') }}</span> I found something</a>
+    </div>
+  </details>
+  <a class="bn-item {{ 'active' if ep.startswith('claims.') }}" href="{{ url_for('claims.mine') }}" aria-label="My claims"{% if ep == 'claims.mine' %} aria-current="page"{% endif %}>{{ icon('file') }}</a>
+  <a class="bn-item {{ 'active' if ep == 'main.profile' }}" href="{{ url_for('main.profile') }}" aria-label="Profile"{% if ep == 'main.profile' %} aria-current="page"{% endif %}>{{ icon('user') }}</a>
+</nav>
+{% endif %}
 
 <div id="confirm-modal" class="modal" hidden>
   <div class="modal-backdrop" data-modal-dismiss></div>

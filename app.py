@@ -20,7 +20,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from extensions import csrf, ensure_indexes, limiter, login_manager, mail, mongo
-from utils.icons import icon
+from utils.icons import category_short, category_style, icon
 from utils.validators import is_college_email, mask_email, normalize_email, password_problems
 
 STATUS_LABELS = {
@@ -129,6 +129,8 @@ def _register_template_helpers(app):
 
     app.jinja_env.filters["mask_email"] = mask_email
     app.jinja_env.globals["icon"] = icon
+    app.jinja_env.globals["category_style"] = category_style
+    app.jinja_env.globals["category_short"] = category_short
 
     @app.context_processor
     def inject_globals():
@@ -139,6 +141,17 @@ def _register_template_helpers(app):
         def url_with_page(page):
             args = request.args.to_dict()
             args["page"] = page
+            return url_for(request.endpoint, **(request.view_args or {}), **args)
+
+        def url_with_args(**changes):
+            """This page's URL with some query values changed (None removes one); back to page 1."""
+            args = request.args.to_dict()
+            args.pop("page", None)
+            for key, value in changes.items():
+                if value is None or value == "":
+                    args.pop(key, None)
+                else:
+                    args[key] = value
             return url_for(request.endpoint, **(request.view_args or {}), **args)
 
         cfg = app.config
@@ -154,6 +167,7 @@ def _register_template_helpers(app):
             "unread_count": unread,
             "current_year": datetime.now().year,
             "url_with_page": url_with_page,
+            "url_with_args": url_with_args,
         }
 
 
@@ -359,4 +373,11 @@ def _seed_demo(app, clear):
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=int(os.environ.get("PORT", 5000)), debug=app.config["DEBUG"], use_reloader=False)
+    # HOST=0.0.0.0 in .env lets phones on the same Wi-Fi open the site (see SETUP_GUIDE.md).
+    host = os.environ.get("HOST", "127.0.0.1").strip() or "127.0.0.1"
+    debug = app.config["DEBUG"]
+    if host not in ("127.0.0.1", "localhost") and debug:
+        # The debug page can run code, so never expose it to the network.
+        print(" * HOST is not localhost, so debug mode is turned off for safety.")
+        debug = False
+    app.run(host=host, port=int(os.environ.get("PORT", 5000)), debug=debug, use_reloader=False)

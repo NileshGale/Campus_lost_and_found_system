@@ -43,23 +43,28 @@
 <span class="badge type-{{ kind }}">{{ 'Lost' if kind == 'lost' else 'Found' }}</span>
 {%- endmacro %}
 
+{% macro item_photo(item) -%}
+{% if item.image_id %}
+  <img src="{{ url_for('static', filename='uploads/' ~ item.image_id ~ '.jpg') }}" alt="Photo of {{ item.title }}" loading="lazy">
+{% else %}
+  {% set cs = category_style(item.category) %}
+  <div class="placeholder tone-{{ cs[1] }}">{{ icon(cs[0]) }}</div>
+{% endif %}
+{%- endmacro %}
+
 {% macro item_card(item, score=None, show_status=True) -%}
 <a class="item-card" href="{{ url_for('items.detail', item_id=item._id|string) }}">
   <div class="item-media">
-    {% if item.image_id %}
-      <img src="{{ url_for('static', filename='uploads/' ~ item.image_id ~ '.jpg') }}" alt="Photo of {{ item.title }}" loading="lazy">
-      {% if item.type == 'found' %}<span class="blur-note">Blurred for privacy</span>{% endif %}
-    {% else %}
-      <div class="placeholder">{{ icon('box') }}</div>
-    {% endif %}
-    {{ type_badge(item.type) }}
+    {{ item_photo(item) }}
+    {% if item.image_id and item.type == 'found' %}<span class="blur-note">Blurred for privacy</span>{% endif %}
+    <span class="tag tag-{{ item.type }}">{{ item.type }}</span>
   </div>
   <div class="item-body">
     <h3 title="{{ item.title }}">{{ item.title }}</h3>
     <div class="item-meta">{{ icon('pin') }}<span>{{ item.location }}</span></div>
     <div class="item-meta">{{ icon('calendar') }}<span>{{ item.date|datefmt }}</span></div>
     <div class="item-foot">
-      <span class="muted tiny">{{ item.category }}</span>
+      <span class="muted tiny">{{ category_short(item.category) }}</span>
       {% if score is not none %}
         <span class="match-score">{{ score }}% match</span>
       {% elif show_status %}
@@ -67,6 +72,13 @@
       {% endif %}
     </div>
   </div>
+</a>
+{%- endmacro %}
+
+{% macro category_tile(category) -%}
+{% set cs = category_style(category) %}
+<a class="cat-tile" href="{{ url_for('items.browse', category=category) }}">
+  <span class="cat-icon tone-{{ cs[1] }}">{{ icon(cs[0]) }}</span>{{ category_short(category) }}
 </a>
 {%- endmacro %}
 

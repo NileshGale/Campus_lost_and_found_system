@@ -50,6 +50,19 @@ _PATHS = {
     "copy": '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
     "link": '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>'
             '<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    "home": '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    "wallet": '<rect x="2" y="6" width="20" height="14" rx="3"/><path d="M16 13h2M2 10h20"/>',
+    "phone": '<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/>',
+    "laptop": '<rect x="4" y="4" width="16" height="11" rx="2"/><path d="M2 19h20"/>',
+    "bag": '<path d="M6 8h12l1 13H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+    "book": '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5v-2z"/><path d="M8 7h8"/>',
+    "shirt": '<path d="M20.4 6.6 16 3a4 4 0 0 1-8 0L3.6 6.6a1 1 0 0 0-.2 1.3l1.8 2.7a1 1 0 0 0 1.3.3L8 10v10a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V10l1.5.9a1 1 0 0 0 1.3-.3l1.8-2.7a1 1 0 0 0-.2-1.3z"/>',
+    "gem": '<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M12 21 8 9l4-6 4 6z"/>',
+    "bottle": '<path d="M9 2h6v3l1.5 2.5V20a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2V7.5L9 5z"/><path d="M7.5 12h9"/>',
+    "ball": '<circle cx="12" cy="12" r="10"/><path d="M4.9 4.9c4 1.8 6 5.6 6 10.6M19 5c-4 2-6 5.5-6 10.5M2.5 10.5c6 0 13 0 19 1"/>',
+    "sliders": '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+    "chevron-down": '<path d="m6 9 6 6 6-6"/>',
+    "chevron-right": '<path d="m9 18 6-6-6-6"/>',
 }
 
 
@@ -60,3 +73,39 @@ def icon(name, cls=""):
         f'<svg class="{classes}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
         f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{paths}</svg>'
     )
+
+
+# Icon and colour tone for each item category (used for tiles, chips and photo placeholders).
+CATEGORY_STYLES = {
+    "Electronics": ("laptop", "indigo"),
+    "Mobile Phones": ("phone", "indigo"),
+    "Wallets & Purses": ("wallet", "blue"),
+    "ID Cards & Documents": ("id", "slate"),
+    "Keys": ("key", "amber"),
+    "Bags": ("bag", "red"),
+    "Books & Stationery": ("book", "amber"),
+    "Clothing": ("shirt", "blue"),
+    "Jewellery & Accessories": ("gem", "indigo"),
+    "Water Bottles": ("bottle", "teal"),
+    "Sports Equipment": ("ball", "teal"),
+    "Other": ("box", "slate"),
+}
+
+CATEGORY_SHORT = {
+    "Wallets & Purses": "Wallets",
+    "ID Cards & Documents": "ID cards",
+    "Mobile Phones": "Phones",
+    "Books & Stationery": "Books",
+    "Jewellery & Accessories": "Jewellery",
+    "Water Bottles": "Bottles",
+    "Sports Equipment": "Sports",
+}
+
+
+def category_style(category):
+    """(icon name, tone) for a category; unknown categories get a box."""
+    return CATEGORY_STYLES.get(category, ("box", "slate"))
+
+
+def category_short(category):
+    return CATEGORY_SHORT.get(category, category)
