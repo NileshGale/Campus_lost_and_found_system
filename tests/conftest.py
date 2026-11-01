@@ -98,7 +98,7 @@ def login(client, email, password=PASSWORD):
 
 def logged_in(response):
     """True when a login ended on the dashboard."""
-    return response.status_code == 200 and response.request.path == "/dashboard"
+    return response.status_code == 200 and response.request.path in ("/dashboard", "/admin/")
 
 
 def new_user(app, outbox, name):

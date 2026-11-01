@@ -129,8 +129,10 @@ def test_reset_password_logs_out_old_sessions(app, outbox):
     other = app.test_client()
     other.post("/forgot-password", data={"email": email})
     other.post("/reset-password/verify", data={"code": last_code(outbox)})
-    response = other.post("/reset-password", data={"password": "N3w!Password", "confirm": "N3w!Password"},
-                          follow_redirects=True)
+    redirected = other.post("/reset-password", data={"password": "N3w!Password", "confirm": "N3w!Password"})
+    assert redirected.status_code == 302
+    assert redirected.headers["Location"].endswith("/login")
+    response = other.get("/login")
     assert b"Password updated" in response.data
 
     assert old_session.get("/dashboard").status_code == 302

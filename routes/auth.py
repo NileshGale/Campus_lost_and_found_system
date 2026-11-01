@@ -10,7 +10,7 @@ from flask_login import current_user, login_user, logout_user
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
-from extensions import csrf, limiter, mongo
+from extensions import limiter, mongo
 from forms import ForgotPasswordForm, LoginForm, OtpForm, RegisterForm, ResetPasswordForm
 from models import User
 from utils import mailer
@@ -298,8 +298,12 @@ def login():
 
 
 @bp.route("/logout", methods=["GET", "POST"])
-@csrf.exempt
 def logout():
+    if current_user and current_user.is_authenticated:
+        mongo.db.users.update_one(
+            {"_id": current_user.oid},
+            {"$set": {"session_token": secrets.token_urlsafe(24)}}
+        )
     logout_user()
     session.clear()
     flash("You've been logged out.", "info")

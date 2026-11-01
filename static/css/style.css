@@ -241,6 +241,54 @@ a.card:hover { text-decoration: none; color: var(--text); border-color: var(--bo
 .alert-info { background: var(--primary-soft); border-color: #BFD4FE; color: #1E40AF; }
 .alert-warning { background: var(--amber-soft); border-color: #F9D99A; color: var(--amber-text); }
 
+body.modal-open { overflow: hidden; }
+
+.modal[hidden] { display: none !important; }
+.modal {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.modal-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(5px);
+}
+.modal-dialog {
+  position: relative; z-index: 1;
+  width: min(440px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 24px 24px 20px;
+}
+.modal-dialog h2 { margin: 0 0 8px; font-size: 1.2rem; }
+.modal-dialog p { margin: 0 0 22px; color: var(--muted); font-size: 0.95rem; }
+.modal-dialog .btn-row { margin-top: 4px; }
+
+.toast-host {
+  position: fixed; right: 20px; bottom: 20px; z-index: 210;
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  max-width: min(360px, calc(100% - 32px));
+}
+.toast {
+  background: #0F172A; color: #fff; padding: 12px 16px; border-radius: 12px;
+  box-shadow: var(--shadow-lg); font-size: 0.9rem; font-weight: 600;
+  animation: toast-in 0.2s ease;
+}
+.toast.hide { opacity: 0; transform: translateY(6px); transition: opacity 0.25s, transform 0.25s; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.filter-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 999px; background: var(--primary-soft);
+  color: var(--primary); font-size: 0.82rem; font-weight: 650; text-decoration: none;
+}
+.chip:hover { background: #DBEAFE; color: var(--primary-hover); text-decoration: none; }
+.chip .x { font-size: 1rem; line-height: 1; opacity: 0.7; }
+
 /* ---------- Forms ---------- */
 .form-group { margin-bottom: 18px; }
 .form-label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: var(--text); }
@@ -258,10 +306,11 @@ a.card:hover { text-decoration: none; color: var(--text); border-color: var(--bo
   position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
   background: none; border: none; padding: 7px; cursor: pointer; color: var(--muted);
   display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;
+  z-index: 2;
   transition: color 0.15s, background-color 0.15s;
 }
 .password-toggle:hover { color: var(--text); background: var(--surface-2); }
-.password-toggle svg { width: 19px; height: 19px; display: block; }
+.password-toggle svg { width: 19px; height: 19px; display: block; pointer-events: none; }
 .password-toggle .eye-slash { display: inline-flex; }
 .password-toggle .eye-plain { display: none !important; }
 .password-toggle.is-visible .eye-slash { display: none !important; }
@@ -477,7 +526,7 @@ table.table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
 
 .filter-bar { display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: 12px; align-items: end; }
 .filter-bar .form-group { margin: 0; }
-.filter-more { display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 12px; align-items: end; margin-top: 12px; }
+.filter-more { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 12px; align-items: end; margin-top: 12px; }
 .filter-more .form-group { margin: 0; }
 .result-count { color: var(--muted); font-size: 0.92rem; margin: 22px 0 14px; }
 
@@ -593,6 +642,7 @@ body.app .footer { margin-top: 0; }
   .filter-bar, .filter-more { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; gap: 24px; }
   .cta-band { padding: 28px 22px; }
+  .toast-host { left: 16px; right: 16px; bottom: 16px; max-width: none; }
   .section { padding-top: 64px; }
   .hero-visual { padding-bottom: 8px; }
   .mock-float { position: relative; right: auto; bottom: auto; width: auto; margin: 14px 0 0 32px; }

@@ -24,6 +24,29 @@ def pending_count(item_id):
     return mongo.db.claims.count_documents({"item_id": item_id, "status": "pending"})
 
 
+def close_pending_claims(item, by=None, note="This item is no longer available."):
+    """Close pending claims without a trust penalty (item returned or removed)."""
+    others = list(mongo.db.claims.find({"item_id": item["_id"], "status": "pending"}, {"claimant_id": 1}))
+    if not others:
+        return 0
+    now = utcnow()
+    mongo.db.claims.update_many(
+        {"_id": {"$in": [o["_id"] for o in others]}, "status": "pending"},
+        {
+            "$set": {"status": "closed", "reviewed_at": now},
+            "$push": {"history": history_entry("closed", by, note)},
+        },
+    )
+    for other in others:
+        notify(
+            other["claimant_id"],
+            f"Your claim for “{item['title']}” was closed. {note}",
+            "claim",
+            _claim_url(other["_id"]),
+        )
+    return len(others)
+
+
 def can_review(user, claim, item):
     """Admins review any pending claim. The finder reviews only when it's the item's only
     pending claim; two or more claims make it "disputed" and only an admin decides."""
@@ -45,8 +68,17 @@ def _new_handover_code(claim_id):
     return code, fields
 
 
+def _item_url(item_id, external=False):
+    try:
+        return url_for("items.detail", item_id=str(item_id), _external=external)
+    except RuntimeError:
+        return f"/items/{item_id}"
+
 def _claim_url(claim_id, external=False):
-    return url_for("claims.detail", claim_id=str(claim_id), _external=external)
+    try:
+        return url_for("claims.detail", claim_id=str(claim_id), _external=external)
+    except RuntimeError:
+        return f"/claims/{claim_id}"
 
 
 def approve_claim(claim, item, reviewer, note=None):
@@ -97,7 +129,7 @@ def approve_claim(claim, item, reviewer, note=None):
     finder = db.users.find_one({"_id": item["posted_by"]})
     if finder and finder["_id"] != reviewer.oid:
         notify(finder["_id"], f"A claim for your found item “{item['title']}” was approved.",
-               "claim", url_for("items.detail", item_id=str(item["_id"])))
+               "claim", _item_url(item["_id"]))
     if finder and item.get("held_at") != "security_desk":
         cfg = current_app.config
         mailer.send_claim_status(
@@ -105,7 +137,7 @@ def approve_claim(claim, item, reviewer, note=None):
             f"A claim for “{item['title']}” was approved. If you still have the item, please hand it to "
             f"{cfg['SECURITY_DESK_LOCATION']} ({cfg['SECURITY_DESK_HOURS']}) so the owner can collect it.",
             status="approved",
-            cta_url=url_for("items.detail", item_id=str(item["_id"]), _external=True), cta_label="View item",
+            cta_url=_item_url(item["_id"], external=True), cta_label="View item",
         )
     return True, "Claim approved. The claimant has been emailed a handover code."
 
@@ -193,7 +225,10 @@ def complete_handover(claim, item, admin, code):
         [{"$set": {"trust_score": {"$min": [100, {"$add": [{"$ifNull": ["$trust_score", 100]}, cfg["TRUST_REWARD"]]}]}}}],
     )
 
-    item_url = url_for("items.detail", item_id=str(item["_id"]), _external=True)
+    try:
+        item_url = _item_url(item["_id"], external=True)
+    except RuntimeError:
+        item_url = f"/items/{item['_id']}"
     for user_id, role in ((claim["claimant_id"], "owner"), (item["posted_by"], "finder")):
         user = db.users.find_one({"_id": user_id})
         if not user:
@@ -202,7 +237,7 @@ def complete_handover(claim, item, admin, code):
             message = f"You collected “{item['title']}” from the security desk. Glad it's back with you!"
         else:
             message = f"“{item['title']}”, the item you found, is back with its owner. Thank you for reporting it!"
-        notify(user_id, message, "handover", url_for("items.detail", item_id=str(item["_id"])))
+        notify(user_id, message, "handover", _item_url(item["_id"]))
         mailer.send_claim_status(user["email"], user["name"], "Item returned", message,
                                  status="completed", cta_url=item_url, cta_label="View item")
     return True, "Handover complete. The item is now marked as returned."

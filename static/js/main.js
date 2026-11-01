@@ -43,12 +43,160 @@
   document.querySelectorAll(".alert-close").forEach(function (btn) {
     btn.addEventListener("click", function () { btn.closest(".alert").remove(); });
   });
+  document.querySelectorAll(".flash-stack .alert:not(.alert-error)").forEach(function (alert) {
+    window.setTimeout(function () {
+      if (alert && alert.parentNode) alert.remove();
+    }, 8000);
+  });
 
-  // --- Confirm before destructive actions: <form data-confirm="..."> ---
-  document.querySelectorAll("form[data-confirm]").forEach(function (form) {
-    form.addEventListener("submit", function (e) {
-      if (!window.confirm(form.getAttribute("data-confirm"))) e.preventDefault();
+  // --- In-app confirm dialog (replaces window.confirm) ---
+  var modal = document.getElementById("confirm-modal");
+  var modalTitle = document.getElementById("confirm-title");
+  var modalMessage = document.getElementById("confirm-message");
+  var modalOk = document.getElementById("confirm-ok");
+  var lastFocus = null;
+  var confirmResolver = null;
+
+  function setModalOpen(open) {
+    if (!modal) return;
+    document.body.classList.toggle("modal-open", open);
+    if (open) {
+      lastFocus = document.activeElement;
+      modal.hidden = false;
+      modal.removeAttribute("hidden");
+      document.querySelectorAll("details.dropdown[open]").forEach(function (d) {
+        d.removeAttribute("open");
+      });
+      var cancelBtn = modal.querySelector(".modal-dialog [data-modal-dismiss]");
+      window.setTimeout(function () { (cancelBtn || modalOk).focus(); }, 0);
+    } else {
+      modal.hidden = true;
+      modal.setAttribute("hidden", "");
+      if (modalOk) {
+        modalOk.classList.remove("btn-danger-solid");
+        modalOk.classList.add("btn-primary");
+      }
+      if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+    }
+  }
+
+  function closeConfirm(result) {
+    var resolve = confirmResolver;
+    confirmResolver = null;
+    setModalOpen(false);
+    if (resolve) resolve(!!result);
+  }
+
+  function openConfirm(opts) {
+    if (!modal || !modalTitle || !modalMessage || !modalOk) {
+      return Promise.resolve(window.confirm((opts.title ? opts.title + " " : "") + (opts.message || "")));
+    }
+    if (confirmResolver) closeConfirm(false);
+    modalTitle.textContent = opts.title || "Please confirm";
+    modalMessage.textContent = opts.message || "";
+    modalOk.textContent = opts.okLabel || "Confirm";
+    if (opts.danger) {
+      modalOk.classList.remove("btn-primary");
+      modalOk.classList.add("btn-danger-solid");
+    } else {
+      modalOk.classList.remove("btn-danger-solid");
+      modalOk.classList.add("btn-primary");
+    }
+    setModalOpen(true);
+    return new Promise(function (resolve) { confirmResolver = resolve; });
+  }
+
+  if (modal) {
+    modal.addEventListener("click", function (e) {
+      if (e.target.closest("[data-modal-dismiss]")) closeConfirm(false);
     });
+    modalOk.addEventListener("click", function () { closeConfirm(true); });
+    document.addEventListener("keydown", function (e) {
+      if (modal.hidden) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeConfirm(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      var focusable = modal.querySelectorAll("button:not([disabled])");
+      if (!focusable.length) return;
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
+  function confirmAttrs(el) {
+    if (!el) return null;
+    var message = el.getAttribute("data-confirm");
+    if (!message) return null;
+    return {
+      message: message,
+      title: el.getAttribute("data-confirm-title") || "Please confirm",
+      okLabel: el.getAttribute("data-confirm-ok") || "Confirm",
+      danger: el.hasAttribute("data-danger")
+    };
+  }
+
+  document.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (form.getAttribute("data-confirmed") === "1") {
+      form.removeAttribute("data-confirmed");
+      return;
+    }
+    var submitter = e.submitter || document.activeElement;
+    var opts = confirmAttrs(submitter) || confirmAttrs(form);
+    if (!opts) return;
+    e.preventDefault();
+    openConfirm(opts).then(function (ok) {
+      if (!ok) return;
+      form.setAttribute("data-confirmed", "1");
+      if (typeof form.requestSubmit === "function") form.requestSubmit(submitter instanceof HTMLElement ? submitter : undefined);
+      else form.submit();
+    });
+  });
+
+  // --- Copy to clipboard ---
+  function toast(message) {
+    var host = document.getElementById("toast-host");
+    if (!host) return;
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.setAttribute("role", "status");
+    el.textContent = message;
+    host.appendChild(el);
+    window.setTimeout(function () {
+      el.classList.add("hide");
+      window.setTimeout(function () { el.remove(); }, 280);
+    }, 2800);
+  }
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-copy]");
+    if (!btn) return;
+    e.preventDefault();
+    var text = btn.getAttribute("data-copy") || "";
+    var label = btn.querySelector("[data-copy-text]") || btn;
+    var original = label.textContent;
+    var done = function () {
+      label.textContent = "Copied";
+      toast("Link copied");
+      window.setTimeout(function () { label.textContent = original; }, 1800);
+    };
+    var fail = function () { toast("Could not copy. Select the address bar instead."); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(fail);
+    } else {
+      fail();
+    }
   });
 
   // --- OTP input: digits only ---
@@ -101,20 +249,21 @@
   }
 
   // --- Live password checklist ---
-  document.querySelectorAll("input[data-rules]").forEach(function (input) {
-    var list = document.getElementById(input.getAttribute("data-rules"));
-    if (!list) return;
-    var rules = {
-      length: function (v) { return (v || "").length >= 8; },
-      upper: function (v) { return /[A-Z]/.test(v || ""); },
-      number: function (v) { return /[0-9]/.test(v || ""); },
-      special: function (v) { return /[^A-Za-z0-9\s]/.test(v || ""); }
-    };
+  var passwordRules = {
+    length: function (v) { return (v || "").length >= 8; },
+    upper: function (v) { return /[A-Z]/.test(v || ""); },
+    number: function (v) { return /[0-9]/.test(v || ""); },
+    special: function (v) { return /[^A-Za-z0-9\s]/.test(v || ""); }
+  };
+
+  function bindPasswordRules(input, list) {
+    if (!input || !list || input.dataset.rulesBound) return;
+    input.dataset.rulesBound = "1";
     var update = function () {
       var val = input.value || "";
       list.querySelectorAll("[data-rule]").forEach(function (li) {
         var ruleName = li.getAttribute("data-rule");
-        var ok = rules[ruleName] ? rules[ruleName](val) : false;
+        var ok = passwordRules[ruleName] ? passwordRules[ruleName](val) : false;
         li.classList.toggle("ok", ok);
       });
     };
@@ -122,6 +271,15 @@
       input.addEventListener(evt, update);
     });
     update();
+  }
+
+  document.querySelectorAll("input[data-rules]").forEach(function (input) {
+    bindPasswordRules(input, document.getElementById(input.getAttribute("data-rules")));
+  });
+  document.querySelectorAll(".password-rules").forEach(function (list) {
+    var group = list.closest(".form-group");
+    var input = group ? group.querySelector("input") : null;
+    bindPasswordRules(input, list);
   });
 
   // --- Image inputs: check type/size early and preview the photo ---
@@ -141,8 +299,14 @@
       input.setCustomValidity(problem);
       if (problem) input.reportValidity();
       if (preview) {
+        if (preview.dataset.objectUrl) {
+          URL.revokeObjectURL(preview.dataset.objectUrl);
+          delete preview.dataset.objectUrl;
+        }
         if (!problem && files[0]) {
-          preview.src = URL.createObjectURL(files[0]);
+          var objectUrl = URL.createObjectURL(files[0]);
+          preview.dataset.objectUrl = objectUrl;
+          preview.src = objectUrl;
           preview.classList.add("show");
         } else {
           preview.classList.remove("show");
@@ -193,20 +357,22 @@
         }
       });
     });
-  // --- Password visibility toggle (eye icon) ---
-  document.querySelectorAll(".password-toggle").forEach(function (btn) {
-    btn.addEventListener("click", function (e) {
-      e.preventDefault();
-      var wrap = btn.closest(".password-input-group");
-      if (!wrap) return;
-      var input = wrap.querySelector("input");
-      if (!input) return;
+  });
 
-      var isText = input.type === "text";
-      input.type = isText ? "password" : "text";
-      btn.classList.toggle("is-visible", !isText);
-      btn.setAttribute("aria-label", isText ? "Show password" : "Hide password");
-    });
+  // --- Password visibility toggle (eye icon) ---
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest(".password-toggle");
+    if (!btn) return;
+    e.preventDefault();
+    var wrap = btn.closest(".password-input-group");
+    if (!wrap) return;
+    var input = wrap.querySelector("input");
+    if (!input) return;
+
+    var hide = input.type === "text";
+    input.type = hide ? "password" : "text";
+    btn.classList.toggle("is-visible", !hide);
+    btn.setAttribute("aria-label", hide ? "Show password" : "Hide password");
   });
 })();
 

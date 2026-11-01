@@ -20,7 +20,7 @@ ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 ALLOWED_FORMATS = {"JPEG", "PNG", "WEBP"}
 FILE_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
-Image.MAX_IMAGE_PIXELS = 30_000_000  # refuse "decompression bomb" images
+Image.MAX_IMAGE_PIXELS = 15_000_000  # Stricter memory guard against pixel decompression bombs  # refuse "decompression bomb" images
 
 
 class UploadError(ValueError):

@@ -42,18 +42,18 @@
               {% if user.role != 'admin' %}
               <div class="actions">
                 {% if (user.rejected_claims or 0) >= max_rejected %}
-                  <form method="post" action="{{ url_for('admin.unblock_claims', user_id=user._id|string) }}">
+                  <form method="post" action="{{ url_for('admin.unblock_claims', user_id=user._id|string) }}" data-confirm="Their rejected-claims count will be reset to zero." data-confirm-title="Allow {{ user.name }} to claim again?" data-confirm-ok="Allow claims">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button class="btn btn-outline btn-sm" type="submit">Allow claims</button>
                   </form>
                 {% endif %}
                 {% if user.is_banned %}
-                  <form method="post" action="{{ url_for('admin.unban', user_id=user._id|string) }}">
+                  <form method="post" action="{{ url_for('admin.unban', user_id=user._id|string) }}" data-confirm="They will be able to log in again." data-confirm-title="Unban {{ user.name }}?" data-confirm-ok="Unban">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button class="btn btn-outline btn-sm" type="submit">Unban</button>
                   </form>
                 {% else %}
-                  <form method="post" action="{{ url_for('admin.ban', user_id=user._id|string) }}" data-confirm="Ban {{ user.name }}? They'll be logged out and can't log in.">
+                  <form method="post" action="{{ url_for('admin.ban', user_id=user._id|string) }}" data-confirm="They'll be logged out immediately and won't be able to sign in." data-confirm-title="Ban {{ user.name }}?" data-confirm-ok="Ban user" data-danger>
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button class="btn btn-danger btn-sm" type="submit">Ban</button>
                   </form>

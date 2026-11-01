@@ -167,7 +167,9 @@ def detail(claim_id):
 @login_required
 def review(claim_id):
     claim, item = get_claim_and_item(claim_id)
-    _role_for(claim, item)
+    role = _role_for(claim, item)
+    if role not in ("finder", "admin"):
+        abort(403)
     if not can_review(current_user, claim, item):
         flash("You can't review this claim. If several people claimed the item, an admin decides.", "error")
         return redirect(url_for("claims.detail", claim_id=claim_id))
@@ -184,6 +186,7 @@ def review(claim_id):
 
 @bp.route("/<claim_id>/proof/<file_id>")
 @login_required
+@limiter.limit("60 per minute", key_func=user_or_ip)
 def proof(claim_id, file_id):
     claim, item = get_claim_and_item(claim_id)
     _role_for(claim, item)

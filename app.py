@@ -210,6 +210,9 @@ def _register_security_headers(app):
         headers.setdefault("X-Frame-Options", "DENY")
         headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+        headers.setdefault("Cross-Origin-Resource-Policy", "same-origin")
+        headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
         headers.setdefault("Content-Security-Policy", CSP)
         if app.config["SESSION_COOKIE_SECURE"]:
             headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")

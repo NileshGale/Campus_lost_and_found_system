@@ -46,7 +46,10 @@
     <div class="filter-more">
       <div class="form-group">
         <label class="form-label" for="location">Location</label>
-        <input class="form-control" id="location" name="location" value="{{ filters.location }}" placeholder="e.g. Library">
+        <input class="form-control" id="location" name="location" value="{{ filters.location }}" list="campus-locations" placeholder="e.g. Library">
+        <datalist id="campus-locations">
+          {% for loc in locations %}<option value="{{ loc }}">{% endfor %}
+        </datalist>
       </div>
       <div class="form-group">
         <label class="form-label" for="date_from">From</label>
@@ -56,12 +59,27 @@
         <label class="form-label" for="date_to">To</label>
         <input class="form-control" id="date_to" name="date_to" type="date" value="{{ filters.date_to }}">
       </div>
+      <div class="form-group">
+        <label class="form-label" for="sort">Sort</label>
+        <select class="form-control" id="sort" name="sort">
+          <option value="newest" {{ 'selected' if filters.sort != 'oldest' }}>Newest first</option>
+          <option value="oldest" {{ 'selected' if filters.sort == 'oldest' }}>Oldest first</option>
+        </select>
+      </div>
       <div class="btn-row">
         <button class="btn btn-primary" type="submit">{{ icon('search') }} Search</button>
         <a class="btn btn-ghost" href="{{ url_for('items.browse') }}">Clear</a>
       </div>
     </div>
   </form>
+
+  {% if chips %}
+    <div class="filter-chips" aria-label="Active filters">
+      {% for label, value, href in chips %}
+        <a class="chip" href="{{ href }}" title="Remove {{ label }} filter">{{ label }}: {{ value }} <span class="x" aria-hidden="true">&times;</span></a>
+      {% endfor %}
+    </div>
+  {% endif %}
 
   <p class="result-count">{{ result.total }} item{{ '' if result.total == 1 else 's' }} found</p>
 

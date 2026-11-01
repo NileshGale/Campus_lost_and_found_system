@@ -127,12 +127,17 @@
           <h3>Manage post</h3>
           <div class="stack">
             {% if item.type == 'lost' %}
-              <form method="post" action="{{ url_for('items.resolve', item_id=item._id|string) }}" data-confirm="Mark this item as returned? It will no longer appear in searches.">
+              <form method="post" action="{{ url_for('items.resolve', item_id=item._id|string) }}" data-confirm="It will no longer appear in searches. You can still open this page from your dashboard." data-confirm-title="Mark this item as returned?" data-confirm-ok="Mark as returned">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button class="btn btn-teal btn-block" type="submit">{{ icon('check') }} I got it back</button>
               </form>
+            {% elif item.held_at == 'finder' %}
+              <form method="post" action="{{ url_for('items.resolve', item_id=item._id|string) }}" data-confirm="Use this only if you already gave the item back yourself. Any pending claims will be closed without a penalty." data-confirm-title="Mark this item as returned?" data-confirm-ok="Mark as returned">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-teal btn-block" type="submit">{{ icon('check') }} I returned it to the owner</button>
+              </form>
             {% endif %}
-            <form method="post" action="{{ url_for('items.delete', item_id=item._id|string) }}" data-confirm="Delete this post? This can't be undone.">
+            <form method="post" action="{{ url_for('items.delete', item_id=item._id|string) }}" data-confirm="This can't be undone. The post will be hidden from searches." data-confirm-title="Delete this post?" data-confirm-ok="Delete post" data-danger>
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button class="btn btn-danger btn-block" type="submit">Delete post</button>
             </form>
@@ -151,7 +156,7 @@
               </form>
             {% endif %}
             {% if item.status in ['open', 'claimed'] %}
-              <form method="post" action="{{ url_for('admin.remove_item', item_id=item._id|string) }}" data-confirm="Remove this post? Open claims on it will be closed.">
+              <form method="post" action="{{ url_for('admin.remove_item', item_id=item._id|string) }}" data-confirm="Open claims on this post will be closed. The poster will be notified with your reason." data-confirm-title="Remove this post?" data-confirm-ok="Remove post" data-danger>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                   <label class="form-label" for="reason">Reason for removing</label>
@@ -160,7 +165,7 @@
                 <button class="btn btn-danger btn-block" type="submit">Remove post</button>
               </form>
             {% elif item.status == 'removed' %}
-              <form method="post" action="{{ url_for('admin.restore_item', item_id=item._id|string) }}">
+              <form method="post" action="{{ url_for('admin.restore_item', item_id=item._id|string) }}" data-confirm="It will show up in searches again." data-confirm-title="Restore this post?" data-confirm-ok="Restore">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button class="btn btn-outline btn-block" type="submit">Restore post</button>
               </form>
@@ -168,6 +173,12 @@
           </div>
         </div>
       {% endif %}
+
+      <div class="card">
+        <h3>{{ icon('link') }} Share this post</h3>
+        <p class="muted small">Copy the link if you want a friend on campus to take a look. They still need to log in.</p>
+        <button type="button" class="btn btn-outline btn-block" data-copy="{{ url_for('items.detail', item_id=item._id|string, _external=True) }}">{{ icon('copy') }} <span data-copy-text>Copy link</span></button>
+      </div>
 
       <div class="card card-soft">
         <h3>{{ icon('building') }} Handover point</h3>

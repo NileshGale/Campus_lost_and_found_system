@@ -56,7 +56,10 @@
             <div class="menu-head"><strong>{{ current_user.name }}</strong><span>{{ current_user.email }}</span></div>
             <hr>
             <a href="{{ url_for('main.profile') }}">{{ icon('user') }} Profile</a>
-            <a href="{{ url_for('auth.logout') }}">{{ icon('logout') }} Log out</a>
+            <form method="post" action="{{ url_for('auth.logout') }}" data-confirm="You'll need to sign in again to report items or check claims." data-confirm-title="Log out?" data-confirm-ok="Log out">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit">{{ icon('logout') }} Log out</button>
+            </form>
           </div>
         </details>
       {% else %}
@@ -136,6 +139,18 @@
   </div>
 </footer>
 
+<div id="confirm-modal" class="modal" hidden>
+  <div class="modal-backdrop" data-modal-dismiss></div>
+  <div class="modal-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <h2 id="confirm-title">Please confirm</h2>
+    <p id="confirm-message"></p>
+    <div class="btn-row justify-end">
+      <button type="button" class="btn btn-outline" data-modal-dismiss>Cancel</button>
+      <button type="button" class="btn btn-primary" id="confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+<div id="toast-host" class="toast-host" aria-live="polite" aria-relevant="additions"></div>
 <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
 </body>
 </html>

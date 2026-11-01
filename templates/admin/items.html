@@ -54,13 +54,13 @@
             <td>
               <div class="actions">
               {% if item.status in ['open', 'claimed'] %}
-                <form class="remove-form" method="post" action="{{ url_for('admin.remove_item', item_id=item._id|string) }}" data-confirm="Remove this post? Open claims on it will be closed.">
+                <form class="remove-form" method="post" action="{{ url_for('admin.remove_item', item_id=item._id|string) }}" data-confirm="Open claims on this post will be closed. The poster will be notified." data-confirm-title="Remove this post?" data-confirm-ok="Remove" data-danger>
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <input class="form-control" name="reason" required minlength="3" maxlength="200" placeholder="Reason" aria-label="Reason for removing">
                   <button class="btn btn-danger btn-sm" type="submit">Remove</button>
                 </form>
               {% elif item.status == 'removed' %}
-                <form method="post" action="{{ url_for('admin.restore_item', item_id=item._id|string) }}">
+                <form method="post" action="{{ url_for('admin.restore_item', item_id=item._id|string) }}" data-confirm="It will appear in searches again." data-confirm-title="Restore this post?" data-confirm-ok="Restore">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-outline btn-sm" type="submit">Restore</button>
                 </form>

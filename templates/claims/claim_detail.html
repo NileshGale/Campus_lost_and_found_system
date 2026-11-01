@@ -135,8 +135,8 @@
             {{ review_form.hidden_tag() }}
             {{ field(review_form.note, rows="3", placeholder="e.g. Answers matched the private details.") }}
             <div class="btn-row">
-              <button class="btn btn-teal" type="submit" name="decision" value="approve">{{ icon('check') }} Approve</button>
-              <button class="btn btn-danger" type="submit" name="decision" value="reject">{{ icon('x') }} Reject</button>
+              <button class="btn btn-teal" type="submit" name="decision" value="approve" data-confirm="The claimant will get a handover code by email and collect the item at the security desk." data-confirm-title="Approve this claim?" data-confirm-ok="Approve">{{ icon('check') }} Approve</button>
+              <button class="btn btn-danger" type="submit" name="decision" value="reject" data-confirm="This lowers the claimant's trust score. After too many rejections they can't submit claims." data-confirm-title="Reject this claim?" data-confirm-ok="Reject" data-danger>{{ icon('x') }} Reject</button>
             </div>
           </form>
         </div>
@@ -155,7 +155,7 @@
             {{ field(handover_form.id_checked) }}
             <button class="btn btn-primary btn-block" type="submit">Confirm handover</button>
           </form>
-          <form class="mt-2" method="post" action="{{ url_for('admin.resend_code', claim_id=claim._id|string) }}" data-confirm="Send a new handover code? The old one will stop working.">
+          <form class="mt-2" method="post" action="{{ url_for('admin.resend_code', claim_id=claim._id|string) }}" data-confirm="The old code will stop working immediately." data-confirm-title="Email a new handover code?" data-confirm-ok="Send new code">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="btn btn-ghost btn-sm btn-block" type="submit">Email the claimant a new code</button>
           </form>

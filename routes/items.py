@@ -1,6 +1,6 @@
 """Reporting, browsing and viewing lost / found items."""
 import re
-from datetime import datetime, time, timezone
+from datetime import datetime, time, timedelta, timezone
 
 from flask import (Blueprint, abort, current_app, flash, redirect, render_template, request, send_from_directory,
                    url_for)
@@ -8,7 +8,7 @@ from flask_login import current_user, login_required
 
 from extensions import limiter, mongo, user_or_ip
 from forms import CATEGORIES, FoundItemForm, LostItemForm
-from utils.claims import pending_count
+from utils.claims import close_pending_claims, pending_count
 from utils.helpers import page_arg, paginate, utcnow
 from utils.matcher import find_matches, notify_matches
 from utils.uploads import UploadError, private_path, save_item_image
@@ -109,6 +109,7 @@ def browse():
         "date_from": args.get("date_from", ""),
         "date_to": args.get("date_to", ""),
         "status": args.get("status") if args.get("status") in ("open", "all") else "open",
+        "sort": args.get("sort") if args.get("sort") in ("newest", "oldest") else "newest",
     }
 
     query = {"status": "open"} if filters["status"] == "open" else {"status": {"$in": ["open", "claimed", "returned"]}}
@@ -122,7 +123,8 @@ def browse():
     if _parse_date(filters["date_from"]):
         date_range["$gte"] = _parse_date(filters["date_from"])
     if _parse_date(filters["date_to"]):
-        date_range["$lte"] = _parse_date(filters["date_to"])
+        # Inclusive of the chosen day (stored dates are midnight UTC).
+        date_range["$lt"] = _parse_date(filters["date_to"]) + timedelta(days=1)
     if date_range:
         query["date"] = date_range
     if filters["q"]:
@@ -134,8 +136,44 @@ def browse():
             for word in words
         ]
 
-    result = paginate(mongo.db.items, query, page_arg(request), 12)
-    return render_template("items/browse.html", result=result, filters=filters, categories=CATEGORIES)
+    result = paginate(mongo.db.items, query, page_arg(request), 12,
+                      sort=("created_at", -1 if filters["sort"] == "newest" else 1))
+
+    def without_filter(key):
+        params = {k: v for k, v in filters.items() if v and k != key}
+        if params.get("status") == "open":
+            params.pop("status", None)
+        if params.get("sort") == "newest":
+            params.pop("sort", None)
+        return url_for("items.browse", **params)
+
+    chips = []
+    labels = {
+        "q": "Search",
+        "type": "Type",
+        "category": "Category",
+        "location": "Location",
+        "date_from": "From",
+        "date_to": "To",
+        "status": "Show",
+        "sort": "Sort",
+    }
+    for key in ("q", "type", "category", "location", "date_from", "date_to"):
+        if filters[key]:
+            chips.append((labels[key], filters[key], without_filter(key)))
+    if filters["status"] == "all":
+        chips.append(("Show", "claimed & returned", without_filter("status")))
+    if filters["sort"] == "oldest":
+        chips.append(("Sort", "oldest first", without_filter("sort")))
+
+    return render_template(
+        "items/browse.html",
+        result=result,
+        filters=filters,
+        chips=chips,
+        categories=CATEGORIES,
+        locations=current_app.config["CAMPUS_LOCATIONS"],
+    )
 
 
 @bp.route("/<item_id>")
@@ -185,6 +223,7 @@ def _can_see_original(item, is_owner, is_admin):
 
 @bp.route("/<item_id>/photo")
 @login_required
+@limiter.limit("60 per minute", key_func=user_or_ip)
 def photo(item_id):
     item = get_item_or_404(item_id)
     is_owner = item["posted_by"] == current_user.oid
@@ -200,19 +239,27 @@ def photo(item_id):
 
 @bp.route("/<item_id>/resolve", methods=["POST"])
 @login_required
+@limiter.limit("20 per hour", key_func=user_or_ip)
 def resolve(item_id):
-    """The owner of a lost post got it back some other way."""
+    """The poster marks the item returned outside the security-desk flow."""
     item = get_item_or_404(item_id)
-    if item["posted_by"] != current_user.oid or item["type"] != "lost" or item["status"] != "open":
+    if item["posted_by"] != current_user.oid or item["status"] != "open":
         abort(403)
-    mongo.db.items.update_one({"_id": item["_id"]},
-                              {"$set": {"status": "returned", "returned_at": utcnow(), "updated_at": utcnow()}})
+    if item["type"] == "found" and item.get("held_at") != "finder":
+        abort(403)
+    now = utcnow()
+    fields = {"status": "returned", "returned_at": now, "updated_at": now}
+    if item["type"] == "found":
+        fields["held_at"] = "returned"
+        close_pending_claims(item, current_user.oid, "The finder marked the item as already returned.")
+    mongo.db.items.update_one({"_id": item["_id"]}, {"$set": fields})
     flash("Great news! The post is marked as returned.", "success")
     return redirect(url_for("items.detail", item_id=item_id))
 
 
 @bp.route("/<item_id>/delete", methods=["POST"])
 @login_required
+@limiter.limit("20 per hour", key_func=user_or_ip)
 def delete(item_id):
     item = get_item_or_404(item_id)
     if item["posted_by"] != current_user.oid or item["status"] != "open":
