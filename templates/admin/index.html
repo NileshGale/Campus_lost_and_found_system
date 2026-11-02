@@ -30,18 +30,18 @@
       <a class="small" href="{{ url_for('admin.claims', status='all') }}">All claims</a>
     </div>
     {% if recent %}
-      <div class="table-wrap">
-        <table class="table">
+      <div class="table-wrap table-stack-wrap">
+        <table class="table table-stack">
           <thead><tr><th>Item</th><th>Claimant</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
           <tbody>
           {% for claim in recent %}
             {% set item = items.get(claim.item_id) %}{% set user = users.get(claim.claimant_id) %}
             <tr>
-              <td>{{ item.title if item else '-' }}</td>
-              <td>{{ user.name if user else '-' }}<span class="cell-sub">{{ user.email if user }}</span></td>
-              <td class="nowrap">{{ claim.created_at|localdt }}</td>
-              <td>{{ status_badge(claim.status) }}</td>
-              <td class="actions"><a class="btn btn-soft btn-sm" href="{{ url_for('claims.detail', claim_id=claim._id|string) }}">Open</a></td>
+              <td class="td-main">{{ item.title if item else '-' }}</td>
+              <td data-label="Claimant">{{ user.name if user else '-' }}<span class="cell-sub">{{ user.email if user }}</span></td>
+              <td data-label="Submitted" class="nowrap">{{ claim.created_at|localdt }}</td>
+              <td data-label="Status">{{ status_badge(claim.status) }}</td>
+              <td class="actions td-actions"><a class="btn btn-soft btn-sm" href="{{ url_for('claims.detail', claim_id=claim._id|string) }}">Open</a></td>
             </tr>
           {% endfor %}
           </tbody>

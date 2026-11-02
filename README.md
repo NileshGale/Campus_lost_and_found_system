@@ -46,7 +46,7 @@ Built with **Flask + MongoDB**. Authentication, OTP email verification, a TF-IDF
 |---|---|
 | Backend | Python 3.12+, Flask 3, PyMongo |
 | Database | MongoDB (local Community Server or the free MongoDB Atlas tier) |
-| Frontend | Jinja templates, hand-written CSS (light theme, Inter font), plain JavaScript with `fetch` |
+| Frontend | Jinja templates, hand-written CSS ("Bold Bulletin" light theme, Poppins font, phone-first with a bottom navigation bar), plain JavaScript with `fetch` |
 | Auth | Flask-Login (session in an HttpOnly cookie), bcrypt, Flask-WTF (CSRF), Flask-Limiter |
 | Email | Flask-Mail through Gmail SMTP (`smtp.gmail.com:587`, TLS) |
 | Images | Pillow: checks that the file is a real image, strips metadata, makes blurred public copies |

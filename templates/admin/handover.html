@@ -25,22 +25,22 @@
   </form>
 
   {% if claims %}
-    <div class="table-wrap">
-      <table class="table">
+    <div class="table-wrap table-stack-wrap">
+      <table class="table table-stack">
         <thead><tr><th>Claimant</th><th>Item</th><th>Item location</th><th>Approved</th><th>Code expires</th><th></th></tr></thead>
         <tbody>
         {% for claim in claims %}
           {% set item = items.get(claim.item_id) %}{% set user = users.get(claim.claimant_id) %}
           <tr>
-            <td><strong>{{ user.name if user else '-' }}</strong><span class="cell-sub">{{ user.email if user }}</span></td>
-            <td>{{ item.title if item else '-' }}</td>
-            <td>
+            <td class="td-main"><strong>{{ user.name if user else '-' }}</strong><span class="cell-sub">{{ user.email if user }}</span></td>
+            <td data-label="Item">{{ item.title if item else '-' }}</td>
+            <td data-label="Item location">
               {% if item and item.held_at == 'security_desk' %}<span class="badge status-approved">At the desk</span>
               {% else %}<span class="badge status-pending">With the finder</span>{% endif %}
             </td>
-            <td class="nowrap">{{ claim.reviewed_at|localdt }}</td>
-            <td class="nowrap">{{ claim.handover_expires_at|localdt }}</td>
-            <td class="actions"><a class="btn btn-primary btn-sm" href="{{ url_for('claims.detail', claim_id=claim._id|string) }}">{{ icon('key') }} Hand over</a></td>
+            <td data-label="Approved" class="nowrap">{{ claim.reviewed_at|localdt }}</td>
+            <td data-label="Code expires" class="nowrap">{{ claim.handover_expires_at|localdt }}</td>
+            <td class="actions td-actions"><a class="btn btn-primary btn-sm" href="{{ url_for('claims.detail', claim_id=claim._id|string) }}">{{ icon('key') }} Hand over</a></td>
           </tr>
         {% endfor %}
         </tbody>

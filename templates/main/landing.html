@@ -4,62 +4,62 @@
 {% block content %}
 
 <section class="hero">
-  <div class="container hero-grid">
-    <div>
-      <span class="eyebrow">{{ college_name }} · Lost &amp; Found</span>
-      <h1>Lost something on campus? <span>Let's bring it back.</span></h1>
-      <p class="hero-lead">Report what you lost or found in a minute. We match posts automatically, and items go back only to the person who can prove they own them.</p>
-      <div class="btn-row">
-        <a class="btn btn-primary btn-lg" href="{{ url_for('items.report', kind='lost') }}">{{ icon('search') }} Report Lost Item</a>
-        <a class="btn btn-outline btn-lg" href="{{ url_for('items.report', kind='found') }}">{{ icon('box') }} I Found Something</a>
+  <div class="container">
+    <div class="hero-panel">
+      <div>
+        <span class="eyebrow">{{ college_name }} · Lost &amp; Found</span>
+        <h1>Lost something on campus? Let's bring it back.</h1>
+        <p class="hero-lead">Report what you lost or found in a minute. We match posts automatically, and items go back only to the person who can prove they own them.</p>
+        <div class="btn-row">
+          <a class="btn btn-white btn-lg" href="{{ url_for('items.report', kind='lost') }}">{{ icon('search') }} Report Lost Item</a>
+          <a class="btn btn-glass btn-lg" href="{{ url_for('items.report', kind='found') }}">{{ icon('box') }} I Found Something</a>
+        </div>
+        <p class="hero-note">{{ icon('shield') }} Only verified {{ college_name }} email accounts can post or claim.</p>
       </div>
-      <p class="hero-note">{{ icon('shield') }} Only verified {{ college_name }} email accounts can post or claim.</p>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="mock-card">
+          <div class="mock-item">
+            <div class="mock-thumb"></div>
+            <div>
+              <span class="badge type-lost">Lost</span>
+              <p class="mock-title">Lost my black wallet</p>
+              <p class="mock-meta">Library, 2nd floor · Yesterday</p>
+            </div>
+          </div>
+          <div class="mock-match">
+            {{ icon('sparkles') }}
+            <div class="mock-bar"><span></span></div>
+            <span>87% match</span>
+          </div>
+          <div class="mock-item">
+            <div class="mock-thumb blurred"></div>
+            <div>
+              <span class="badge type-found">Found</span>
+              <p class="mock-title">Black leather wallet</p>
+              <p class="mock-meta">Library · Today · photo blurred</p>
+            </div>
+          </div>
+        </div>
+        <div class="mock-card mock-float">
+          <div class="row">
+            <span class="dot">{{ icon('key') }}</span>
+            <div>
+              <p class="mock-meta">Handover code</p>
+              <p class="mock-otp">• • • • • •</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="hero-visual" aria-hidden="true">
-      <div class="mock-card">
-        <div class="mock-item">
-          <div class="mock-thumb"></div>
-          <div>
-            <span class="badge type-lost">Lost</span>
-            <p class="mock-title">Lost my black wallet</p>
-            <p class="mock-meta">Library, 2nd floor · Yesterday</p>
-          </div>
-        </div>
-        <div class="mock-match">
-          {{ icon('sparkles') }}
-          <div class="mock-bar"><span></span></div>
-          <span>87% match</span>
-        </div>
-        <div class="mock-item">
-          <div class="mock-thumb blurred"></div>
-          <div>
-            <span class="badge type-found">Found</span>
-            <p class="mock-title">Black leather wallet</p>
-            <p class="mock-meta">Library · Today · photo blurred</p>
-          </div>
-        </div>
-      </div>
-      <div class="mock-card mock-float">
-        <div class="row">
-          <span class="dot">{{ icon('key') }}</span>
-          <div>
-            <p class="mock-meta">Handover code</p>
-            <p class="mock-otp">• • • • • •</p>
-          </div>
-        </div>
-      </div>
+    <div class="stats-strip">
+      <div class="stat"><div class="stat-value">{{ stats.reported }}</div><div class="stat-label">Items reported</div></div>
+      <div class="stat"><div class="stat-value">{{ stats.returned }}</div><div class="stat-label">Items returned</div></div>
+      <div class="stat"><div class="stat-value">{{ stats.users }}</div><div class="stat-label">Active users</div></div>
     </div>
   </div>
 </section>
-
-<div class="container">
-  <div class="stats-strip">
-    <div class="stat"><div class="stat-value">{{ stats.reported }}</div><div class="stat-label">Items reported</div></div>
-    <div class="stat"><div class="stat-value">{{ stats.returned }}</div><div class="stat-label">Items returned</div></div>
-    <div class="stat"><div class="stat-value">{{ stats.users }}</div><div class="stat-label">Active users</div></div>
-  </div>
-</div>
 
 <section class="section" id="how">
   <div class="container">
@@ -132,7 +132,7 @@
         {% for item in recent_found %}{{ item_card(item, show_status=False) }}{% endfor %}
       </div>
       <div class="btn-row justify-center mt-3">
-        <a class="btn btn-outline" href="{{ url_for('items.browse', type='found') }}">See all found items {{ icon('arrow-right') }}</a>
+        <a class="btn btn-outline btn-pill" href="{{ url_for('items.browse', type='found') }}">See all found items {{ icon('arrow-right') }}</a>
       </div>
     {% else %}
       {{ empty_state("Nothing has been handed in yet", "Found items will appear here as soon as someone reports one.", "box") }}
@@ -174,7 +174,7 @@
         <h2>Lost something today?</h2>
         <p>The sooner you post, the sooner a match can find you.</p>
       </div>
-      <a class="btn btn-outline btn-lg" href="{{ url_for('auth.register') if not current_user.is_authenticated else url_for('items.report', kind='lost') }}">
+      <a class="btn btn-white btn-lg" href="{{ url_for('auth.register') if not current_user.is_authenticated else url_for('items.report', kind='lost') }}">
         {{ 'Create your account' if not current_user.is_authenticated else 'Report a lost item' }}
       </a>
     </div>

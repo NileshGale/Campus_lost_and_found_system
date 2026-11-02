@@ -21,7 +21,7 @@ Budget about **45–60 minutes** the first time, mostly waiting for downloads.
 8. [Create your `.env` file (settings and secrets)](#8-create-your-env-file-settings-and-secrets)
 9. [Set up Gmail for sending emails](#9-set-up-gmail-for-sending-emails)
 10. [Create the admin account](#10-create-the-admin-account)
-11. [Start the app](#11-start-the-app)
+11. [Start the app](#11-start-the-app) · [11b. Open it on your phone](#11b-open-it-on-your-phone)
 12. [Try the whole flow once](#12-try-the-whole-flow-once)
 13. [Look inside the database (for the viva)](#13-look-inside-the-database-for-the-viva)
 14. [Run the automated tests](#14-run-the-automated-tests)
@@ -313,6 +313,20 @@ Open **http://127.0.0.1:5000** in Chrome or Edge.
 - **To stop:** click in the terminal and press **Ctrl + C**.
 - **After editing `.env`**, stop and start the app again for the change to apply.
 
+### 11b. Open it on your phone
+
+The design is built for phones (bottom navigation bar, cards instead of tables). To try it on a real phone, the phone and the laptop must be on the **same Wi-Fi**.
+
+1. In `.env`, set `HOST=0.0.0.0`, save, and start the app again (`python app.py`). Debug mode switches itself off in this mode, because the debug page must never be reachable from other devices.
+2. If Windows asks whether Python may communicate on networks, tick **Private networks** only and click **Allow**.
+3. Find the laptop's address: run `ipconfig` and look for **IPv4 Address** under *Wireless LAN adapter Wi-Fi*, for example `192.168.1.23`.
+4. On the phone, open **http://192.168.1.23:5000** (your number, with `:5000` at the end). Use `http`, not `https`, and keep `COOKIE_SECURE=0`.
+5. When you're done, set `HOST=127.0.0.1` again. While it's `0.0.0.0`, anyone on the same Wi-Fi can open the site.
+
+**✅ Check:** the phone shows the site with a round floating bar at the bottom after you log in.
+
+> **College Wi-Fi often blocks phone-to-laptop connections.** If the page never loads, turn on your phone's **hotspot**, connect the laptop to it, run `ipconfig` again for the new address, and open that on the phone.
+
 ---
 
 ## 12. Try the whole flow once
@@ -450,6 +464,7 @@ git push -u origin main
 | `Address already in use` / port 5000 busy | Another program uses port 5000 | `$env:PORT=5001; python app.py`, then open http://127.0.0.1:5001 |
 | Changes in `.env` don't apply | The app reads `.env` only when it starts | Ctrl + C, then `python app.py` again |
 | `flask: command not found` / `not recognized` | venv not active | Activate it (step 6) |
+| The phone can't open the site (keeps loading or "can't reach") | `HOST` is still `127.0.0.1`, the firewall blocked it, or the Wi-Fi isolates devices | Follow step 11b: `HOST=0.0.0.0`, allow Python on private networks, use the laptop's IPv4 address with `:5000`. On college Wi-Fi, use your phone's hotspot instead |
 
 ---
 

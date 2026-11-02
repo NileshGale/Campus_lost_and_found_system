@@ -24,7 +24,7 @@
                 <span class="blur-note">Blurred for privacy</span>
               {% endif %}
             {% else %}
-              <div class="placeholder">{{ icon('image') }}</div>
+              {% set cs = category_style(item.category) %}<div class="placeholder tone-{{ cs[1] }}">{{ icon(cs[0]) }}</div>
             {% endif %}
           </div>
           <div>
