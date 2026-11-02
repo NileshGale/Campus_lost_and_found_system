@@ -374,5 +374,12 @@
     btn.classList.toggle("is-visible", !hide);
     btn.setAttribute("aria-label", hide ? "Show password" : "Hide password");
   });
+
+  // --- Browse filters start open on wide screens, closed on phones ---
+  if (window.matchMedia && window.matchMedia("(min-width: 900px)").matches) {
+    document.querySelectorAll("details[data-open-desktop]").forEach(function (d) {
+      d.setAttribute("open", "");
+    });
+  }
 })();
 

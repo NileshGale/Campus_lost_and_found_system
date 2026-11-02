@@ -22,23 +22,23 @@
   </form>
 
   {% if result.docs %}
-    <div class="table-wrap">
-      <table class="table">
+    <div class="table-wrap table-stack-wrap">
+      <table class="table table-stack">
         <thead><tr><th>User</th><th>Role</th><th>Verified</th><th>Trust</th><th>Rejected claims</th><th>Status</th><th class="center">Actions</th></tr></thead>
         <tbody>
         {% for user in result.docs %}
           <tr>
-            <td><strong>{{ user.name }}</strong><span class="cell-sub">{{ user.email }}</span></td>
-            <td>{% if user.role == 'admin' %}<span class="badge badge-admin">Admin</span>{% else %}User{% endif %}</td>
-            <td>{{ 'Yes' if user.is_verified else 'No' }}</td>
-            <td>{{ user.trust_score }}</td>
-            <td>{{ user.rejected_claims or 0 }}</td>
-            <td>
+            <td class="td-main"><strong>{{ user.name }}</strong><span class="cell-sub">{{ user.email }}</span></td>
+            <td data-label="Role">{% if user.role == 'admin' %}<span class="badge badge-admin">Admin</span>{% else %}User{% endif %}</td>
+            <td data-label="Verified">{{ 'Yes' if user.is_verified else 'No' }}</td>
+            <td data-label="Trust">{{ user.trust_score }}</td>
+            <td data-label="Rejected claims">{{ user.rejected_claims or 0 }}</td>
+            <td data-label="Status">
               {% if user.is_banned %}<span class="badge status-rejected">Banned</span>
               {% elif (user.rejected_claims or 0) >= max_rejected %}<span class="badge status-pending">Can't claim</span>
               {% else %}<span class="badge status-approved">Active</span>{% endif %}
             </td>
-            <td>
+            <td class="td-actions">
               {% if user.role != 'admin' %}
               <div class="actions">
                 {% if (user.rejected_claims or 0) >= max_rejected %}

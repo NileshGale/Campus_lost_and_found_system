@@ -5,7 +5,7 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from flask_login import current_user, login_required, login_user
 
 from extensions import mongo
-from forms import ChangePasswordForm, ProfileForm
+from forms import CATEGORIES, ChangePasswordForm, ProfileForm
 from models import User
 from routes.auth import check_password, hash_password
 from utils.helpers import page_arg, paginate, utcnow
@@ -55,6 +55,17 @@ def dashboard():
         if matches:
             match_groups.append((item, matches))
 
+    # The strongest match goes in the blue home panel.
+    top_match = None
+    for lost_item, matches in match_groups:
+        match, score = matches[0]
+        if top_match is None or score > top_match[2]:
+            top_match = (lost_item, match, score)
+
+    # Latest things handed in by other people.
+    fresh_finds = list(db.items.find({"type": "found", "status": "open", "posted_by": {"$ne": me}})
+                       .sort("created_at", -1).limit(8))
+
     return render_template(
         "main/dashboard.html",
         my_items=my_items,
@@ -64,6 +75,10 @@ def dashboard():
         incoming=incoming,
         found_by_id=found_by_id,
         match_groups=match_groups,
+        top_match=top_match,
+        match_total=sum(len(matches) for _, matches in match_groups),
+        fresh_finds=fresh_finds,
+        categories=CATEGORIES,
     )
 
 

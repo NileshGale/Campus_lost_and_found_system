@@ -12,26 +12,26 @@
   </div>
 
   {% if claims %}
-    <div class="table-wrap">
-      <table class="table">
+    <div class="table-wrap table-stack-wrap">
+      <table class="table table-stack">
         <thead><tr><th>Item</th><th>Submitted</th><th>Status</th><th>Next step</th><th></th></tr></thead>
         <tbody>
         {% for claim in claims %}
           {% set item = items.get(claim.item_id) %}
           <tr>
-            <td>
+            <td class="td-main">
               {% if item %}<a href="{{ url_for('items.detail', item_id=item._id|string) }}">{{ item.title }}</a><span class="cell-sub">{{ item.location }}</span>{% else %}Item removed{% endif %}
             </td>
-            <td class="nowrap">{{ claim.created_at|localdt }}</td>
-            <td>{{ status_badge(claim.status) }}</td>
-            <td class="small">
+            <td data-label="Submitted" class="nowrap">{{ claim.created_at|localdt }}</td>
+            <td data-label="Status">{{ status_badge(claim.status) }}</td>
+            <td data-label="Next step" class="small">
               {% if claim.status == 'pending' %}Waiting for review.
               {% elif claim.status == 'approved' %}Collect it at the security desk with your ID and the code we emailed you.
               {% elif claim.status == 'completed' %}Collected. Enjoy having it back!
               {% elif claim.status == 'rejected' %}Not approved{% if claim.review_note %}: {{ claim.review_note }}{% endif %}.
               {% else %}Closed.{% endif %}
             </td>
-            <td><a class="btn btn-soft btn-sm" href="{{ url_for('claims.detail', claim_id=claim._id|string) }}">Open</a></td>
+            <td class="td-actions"><a class="btn btn-soft btn-sm" href="{{ url_for('claims.detail', claim_id=claim._id|string) }}">Open</a></td>
           </tr>
         {% endfor %}
         </tbody>
